@@ -1,0 +1,660 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Primer microservicio en Spring Boot</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: una columna de lectura (~46rem) con pasos numerados en un riel izquierdo; barra de avance fija arriba. */
+:root{
+  --bg:#F5F7FA; --surface:#FFFFFF; --ink:#16202E; --muted:#556273; --line:#D5DCE5;
+  --accent:#B01E2F; --accent-soft:#F8E6E8; --blue:#22598C; --blue-soft:#E3ECF6;
+  --ok:#2E7D4F; --ok-soft:#E3F1E8;
+  --code-bg:#EEF2F7; --code-ink:#1B2736; --code-head:#E2E8F0;
+  --f-display:"Archivo","Arial Narrow",Arial,sans-serif;
+  --f-body:"Atkinson Hyperlegible",Verdana,system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",Consolas,"Courier New",monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121A23; --surface:#1A2430; --ink:#E7ECF2; --muted:#9AA8B8; --line:#2D3A49;
+    --accent:#E8697A; --accent-soft:#3A2128; --blue:#7DB0E0; --blue-soft:#1C2D3F;
+    --ok:#6CC495; --ok-soft:#173327;
+    --code-bg:#0E151D; --code-ink:#D9E2EC; --code-head:#16212C; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121A23; --surface:#1A2430; --ink:#E7ECF2; --muted:#9AA8B8; --line:#2D3A49;
+  --accent:#E8697A; --accent-soft:#3A2128; --blue:#7DB0E0; --blue-soft:#1C2D3F;
+  --ok:#6CC495; --ok-soft:#173327;
+  --code-bg:#0E151D; --code-ink:#D9E2EC; --code-head:#16212C; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.6}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+a{color:var(--blue);text-underline-offset:2px}
+a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:4px}
+code,kbd{font-family:var(--f-mono);font-size:.86em}
+p code,li code,dd code,dt code,label code{background:var(--code-bg);padding:.08em .35em;border-radius:4px;overflow-wrap:anywhere}
+kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 .35em;background:var(--surface)}
+h1,h2,h3{font-family:var(--f-display);line-height:1.15;text-wrap:balance;margin:0}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+.progress{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.progress-in{max-width:52rem;margin:0 auto;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;align-items:center;gap:14px;font-size:14px}
+.progress-in b{font-family:var(--f-display);font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.bar{flex:1;height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.bar span{display:block;height:100%;width:0;background:var(--ok);transition:width .3s}
+@media (prefers-reduced-motion: reduce){.bar span{transition:none}}
+.progress nav{display:flex;gap:12px;white-space:nowrap}
+.progress nav a{color:var(--muted);text-decoration:none}
+.progress nav a:hover{color:var(--ink)}
+
+main{max-width:52rem;margin:0 auto;padding-block:40px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:56px}
+
+.intro{display:grid;gap:18px}
+.course{color:var(--muted);font-size:15px;margin:0}
+.intro h1{font-size:clamp(2.1rem,5vw,3.1rem);font-weight:800;font-stretch:88%}
+.lead{font-size:19px;max-width:40rem;margin:0}
+.diagram{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;overflow-x:auto}
+.diagram svg{display:block;width:100%;min-width:520px;height:auto}
+.d-box{fill:var(--blue-soft);stroke:var(--blue);stroke-width:2}
+.d-db{fill:var(--surface);stroke:var(--ink);stroke-width:2}
+.d-client{fill:var(--surface);stroke:var(--ink);stroke-width:2}
+.d-line{stroke:var(--muted);stroke-width:2;fill:none}
+.d-call{stroke:var(--accent);stroke-width:2.5;fill:none}
+.d-t{fill:var(--ink);font-family:var(--f-body);font-size:15px}
+.d-tb{fill:var(--ink);font-family:var(--f-display);font-weight:700;font-size:17px}
+.d-port{fill:var(--blue);font-family:var(--f-mono);font-size:13px}
+.d-red{fill:var(--accent);font-family:var(--f-mono);font-size:13px}
+.d-mut{fill:var(--muted);font-family:var(--f-body);font-size:13px}
+.d-arrow{fill:var(--muted)} .d-arrow-r{fill:var(--accent)}
+
+.before{display:grid;grid-template-columns:repeat(auto-fit,minmax(14rem,1fr));gap:14px}
+.before div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.before h3{font-size:17px;margin-bottom:4px}
+.before p{margin:0;font-size:15.5px}
+
+.part{display:flex;flex-direction:column;gap:30px}
+.part-head{border-top:3px solid var(--ink);padding-top:14px}
+.part-tag{margin:0 0 2px;color:var(--accent);font-family:var(--f-display);font-weight:700;font-size:15px;letter-spacing:.02em}
+.part-head h2{font-size:clamp(1.6rem,3.6vw,2.1rem);font-weight:800;font-stretch:92%}
+.part-head p:last-child{margin:6px 0 0;color:var(--muted)}
+
+.step{display:grid;grid-template-columns:44px 1fr;gap:16px}
+.step-num{width:40px;height:40px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-family:var(--f-display);font-weight:800;font-size:18px;font-variant-numeric:tabular-nums}
+.step.done .step-num{background:var(--ok)}
+.step-body{min-width:0;display:flex;flex-direction:column;gap:12px}
+.step-body h3{font-size:22px;font-weight:700;padding-top:6px}
+.step-body p{margin:0}
+.tip{font-size:15.5px;color:var(--muted);border-left:3px solid var(--line);padding-left:12px}
+
+dl.form{display:grid;grid-template-columns:max-content 1fr;gap:6px 18px;margin:0;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+dl.form dt{font-family:var(--f-mono);font-size:14px;color:var(--muted);padding-top:2px}
+dl.form dd{margin:0;min-width:0}
+@media (max-width:520px){dl.form{grid-template-columns:1fr}dl.form dd{margin-bottom:6px}}
+
+.code{margin:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--code-bg)}
+.code-head{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--code-head);padding:6px 8px 6px 14px;border-bottom:1px solid var(--line)}
+.code-path{font-family:var(--f-mono);font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.copy{font:600 13px var(--f-body);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:4px 12px;cursor:pointer;flex:none}
+.copy:hover{border-color:var(--blue)}
+.copy.ok{background:var(--ok-soft);border-color:var(--ok);color:var(--ok)}
+.code pre{margin:0;padding:14px 16px;overflow-x:auto;font-family:var(--f-mono);font-size:13.5px;line-height:1.55;color:var(--code-ink);tab-size:4}
+
+.urls{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.urls li{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline}
+.urls a{font-family:var(--f-mono);font-size:14.5px;word-break:break-all}
+.urls span{color:var(--muted);font-size:15px}
+ol.qs{margin:0;padding-left:1.4em;display:grid;gap:6px}
+
+.check{display:flex;gap:12px;align-items:flex-start;background:var(--ok-soft);border:1px solid color-mix(in srgb,var(--ok) 35%,transparent);border-radius:10px;padding:12px 14px;cursor:pointer;font-size:15.5px}
+.check input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--ok);flex:none;cursor:pointer}
+.check b{color:var(--ok)}
+
+.retos{display:grid;gap:22px}
+.retos article{display:flex;flex-direction:column;gap:12px;min-width:0}
+.retos h3{font-size:20px}
+.retos p{margin:0}
+
+.trouble{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px}
+.trouble h2{font-size:24px;margin-bottom:12px}
+.trouble dl{margin:0;display:grid;gap:12px}
+.err{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:6px 20px;padding-top:12px;border-top:1px solid var(--line)}
+.err:first-child{border-top:0;padding-top:0}
+.err dt{font-weight:700}
+.err dd{margin:0}
+@media (max-width:640px){.err{grid-template-columns:1fr}}
+
+.deliver{border:2px solid var(--accent);border-radius:12px;padding:20px;background:var(--accent-soft)}
+.deliver h2{font-size:24px;margin-bottom:10px}
+.deliver ol{margin:0;padding-left:1.4em;display:grid;gap:6px}
+.deliver p{margin:12px 0 0}
+@media (max-width:600px){.progress nav{display:none}.step{grid-template-columns:34px 1fr;gap:12px}.step-num{width:32px;height:32px;font-size:15px}}
+</style>
+
+<div class="progress" role="region" aria-label="Avance del laboratorio">
+  <div class="progress-in">
+    <b><span id="count">0</span> de 15 pasos</b>
+    <div class="bar" aria-hidden="true"><span id="fill"></span></div>
+    <nav aria-label="Secciones"><a href="#parte-a">Catálogo</a><a href="#parte-b">Pedidos</a><a href="#ayuda">Si algo falla</a></nav>
+  </div>
+</div>
+
+<main>
+  <section class="intro">
+    <p class="course">Desarrollo de aplicaciones basadas en microservicios, UFPS</p>
+    <h1>Primer microservicio en Spring Boot</h1>
+    <p class="lead">Hoy construyen dos microservicios, cada uno con su propia base de datos, y hacen que conversen por HTTP. Trabajen en parejas: uno escribe y el otro revisa, y cambian de rol en la Parte B.</p>
+    <div class="diagram">
+      <svg viewBox="0 0 760 250" role="img" aria-label="El cliente llama a Pedidos en el puerto 8082 y a Catálogo en el 8081. Pedidos consulta a Catálogo con GET /productos/{id}. Cada servicio tiene su propia base de datos H2.">
+        <defs>
+          <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="d-arrow" d="M0 0L10 5L0 10z"/></marker>
+          <marker id="ahr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="d-arrow-r" d="M0 0L10 5L0 10z"/></marker>
+        </defs>
+        <rect class="d-client" x="275" y="8" width="210" height="40" rx="20"/>
+        <text class="d-t" x="380" y="33" text-anchor="middle">Navegador / PowerShell</text>
+        <path class="d-line" d="M340 48 L190 92" marker-end="url(#ah)"/>
+        <path class="d-line" d="M420 48 L570 92" marker-end="url(#ah)"/>
+        <rect class="d-box" x="470" y="95" width="210" height="70" rx="8"/>
+        <text class="d-tb" x="575" y="126" text-anchor="middle">Pedidos</text>
+        <text class="d-port" x="575" y="148" text-anchor="middle">localhost:8082</text>
+        <rect class="d-box" x="80" y="95" width="210" height="70" rx="8"/>
+        <text class="d-tb" x="185" y="126" text-anchor="middle">Catálogo</text>
+        <text class="d-port" x="185" y="148" text-anchor="middle">localhost:8081</text>
+        <path class="d-call" d="M470 130 L294 130" marker-end="url(#ahr)"/>
+        <text class="d-red" x="382" y="120" text-anchor="middle">GET /productos/{id}</text>
+        <line class="d-line" x1="185" y1="165" x2="185" y2="190"/>
+        <line class="d-line" x1="575" y1="165" x2="575" y2="190"/>
+        <path class="d-db" d="M145 196 a40 8 0 0 1 80 0 v34 a40 8 0 0 1 -80 0 z"/><path class="d-db" d="M145 196 a40 8 0 0 0 80 0" fill="none"/>
+        <path class="d-db" d="M535 196 a40 8 0 0 1 80 0 v34 a40 8 0 0 1 -80 0 z"/><path class="d-db" d="M535 196 a40 8 0 0 0 80 0" fill="none"/>
+        <text class="d-mut" x="240" y="222">H2 catalogo</text>
+        <text class="d-mut" x="630" y="222">H2 pedidos</text>
+      </svg>
+    </div>
+    <div class="before">
+      <div><h3>Verifiquen Java</h3><p>En PowerShell: <code>java -version</code>. Necesitan 17 o superior.</p></div>
+      <div><h3>Internet</h3><p>La primera ejecución descarga dependencias de Maven.</p></div>
+      <div><h3>Editor</h3><p>El que tenga la sala: IntelliJ, VS Code, Eclipse o NetBeans.</p></div>
+    </div>
+  </section>
+
+<section class="part" id="parte-a"><header class="part-head"><p class="part-tag">Parte A</p><h2>Servicio de Catálogo</h2><p>Un servicio con su propia base de datos y una API REST completa.</p></header>
+<article class="step" id="paso-1"><div class="step-num" aria-hidden="true">1</div><div class="step-body">
+<h3><span class="sr">Paso 1. </span>Generen el proyecto Catálogo</h3>
+<p>Abran <a href="https://start.spring.io" target="_blank" rel="noopener">start.spring.io</a> y llenen el formulario así:</p>
+<dl class="form">
+<dt>Project</dt><dd>Maven</dd>
+<dt>Language</dt><dd>Java</dd>
+<dt>Spring Boot</dt><dd>La versión que viene marcada por defecto (no elijan SNAPSHOT ni M)</dd>
+<dt>Group</dt><dd><code>co.edu.ufps</code></dd>
+<dt>Artifact</dt><dd><code>catalogo</code></dd>
+<dt>Packaging</dt><dd>Jar</dd>
+<dt>Java</dt><dd>La misma versión que les mostró <code>java -version</code> (17, 21 o 25)</dd>
+<dt>Dependencies</dt><dd>Spring Web, Spring Data JPA, H2 Database, Validation</dd>
+</dl>
+<p>Presionen <b>Generate</b>, descompriman el zip en una carpeta propia (por ejemplo <code>Documentos\lab-pareja-3</code>) y ábranla en su editor.</p>
+<p class="tip">Si eligen otro Group o Artifact, el paquete cambia. Todas las clases deben quedar en el mismo paquete que <code>CatalogoApplication</code>, y la primera línea <code>package …</code> de cada archivo debe coincidir con la de esa clase.</p>
+
+<label class="check" for="ok-1"><input type="checkbox" id="ok-1" data-step="1"><span><b>Punto de control.</b> Tienen la carpeta <code>catalogo</code> con <code>pom.xml</code>, <code>mvnw.cmd</code> y la carpeta <code>src</code>.</span></label></div></article>
+<article class="step" id="paso-2"><div class="step-num" aria-hidden="true">2</div><div class="step-body">
+<h3><span class="sr">Paso 2. </span>Configuren el servicio</h3>
+<p>Abran <code>src/main/resources/application.properties</code> y reemplacen su contenido. Aquí decidimos el puerto y la base de datos <b>propia</b> de este servicio.</p>
+<figure class="code"><div class="code-head"><span class="code-path">src/main/resources/application.properties</span><button class="copy" type="button" data-target="c1">Copiar</button></div><pre id="c1"><code>spring.application.name=catalogo
+server.port=8081
+
+# Base de datos propia de este servicio (en memoria)
+spring.datasource.url=jdbc:h2:mem:catalogo
+spring.jpa.show-sql=true
+spring.jpa.defer-datasource-initialization=true
+
+# Mostrar el mensaje de error en las respuestas
+server.error.include-message=always</code></pre></figure>
+
+<label class="check" for="ok-2"><input type="checkbox" id="ok-2" data-step="2"><span><b>Punto de control.</b> El archivo quedó guardado con el puerto 8081.</span></label></div></article>
+<article class="step" id="paso-3"><div class="step-num" aria-hidden="true">3</div><div class="step-body">
+<h3><span class="sr">Paso 3. </span>Arránquenlo por primera vez</h3>
+<p>Abran PowerShell en la carpeta del proyecto (en el Explorador: clic en la barra de dirección, escriban <code>powershell</code> y Enter) y ejecuten:</p>
+<figure class="code"><div class="code-head"><span class="code-path">PowerShell</span><button class="copy" type="button" data-target="c2">Copiar</button></div><pre id="c2"><code>.\mvnw.cmd spring-boot:run</code></pre></figure>
+<p>La primera vez descarga dependencias y puede tardar varios minutos. Mientras tanto, sigan con el paso 4.</p>
+<p class="tip">En Linux o macOS el comando es <code>./mvnw spring-boot:run</code>. Para detener el servicio: <kbd>Ctrl</kbd> + <kbd>C</kbd>.</p>
+
+<label class="check" for="ok-3"><input type="checkbox" id="ok-3" data-step="3"><span><b>Punto de control.</b> En la consola aparece <code>Tomcat started on port 8081</code> y <code>Started CatalogoApplication</code>.</span></label></div></article>
+<article class="step" id="paso-4"><div class="step-num" aria-hidden="true">4</div><div class="step-body">
+<h3><span class="sr">Paso 4. </span>Creen la entidad Producto</h3>
+<p>Una entidad es una clase que JPA convierte en una tabla. Las anotaciones de validación impiden guardar productos sin nombre o con precio negativo.</p>
+<figure class="code"><div class="code-head"><span class="code-path">src/main/java/co/edu/ufps/catalogo/Producto.java</span><button class="copy" type="button" data-target="c3">Copiar</button></div><pre id="c3"><code>package co.edu.ufps.catalogo;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+
+@Entity
+public class Producto {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @NotBlank
+    private String nombre;
+
+    @NotNull
+    @Positive
+    private Double precio;
+
+    @NotNull
+    @Min(0)
+    private Integer stock;
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public String getNombre() { return nombre; }
+    public void setNombre(String nombre) { this.nombre = nombre; }
+
+    public Double getPrecio() { return precio; }
+    public void setPrecio(Double precio) { this.precio = precio; }
+
+    public Integer getStock() { return stock; }
+    public void setStock(Integer stock) { this.stock = stock; }
+}</code></pre></figure>
+
+<label class="check" for="ok-4"><input type="checkbox" id="ok-4" data-step="4"><span><b>Punto de control.</b> La clase compila sin errores en el editor.</span></label></div></article>
+<article class="step" id="paso-5"><div class="step-num" aria-hidden="true">5</div><div class="step-body">
+<h3><span class="sr">Paso 5. </span>Creen el repositorio</h3>
+<p>Con solo extender <code>JpaRepository</code>, Spring genera los métodos para listar, buscar, guardar y borrar. No escriben SQL.</p>
+<figure class="code"><div class="code-head"><span class="code-path">src/main/java/co/edu/ufps/catalogo/ProductoRepository.java</span><button class="copy" type="button" data-target="c4">Copiar</button></div><pre id="c4"><code>package co.edu.ufps.catalogo;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface ProductoRepository extends JpaRepository&lt;Producto, Long&gt; {
+}</code></pre></figure>
+
+<label class="check" for="ok-5"><input type="checkbox" id="ok-5" data-step="5"><span><b>Punto de control.</b> La interfaz compila sin errores.</span></label></div></article>
+<article class="step" id="paso-6"><div class="step-num" aria-hidden="true">6</div><div class="step-body">
+<h3><span class="sr">Paso 6. </span>Creen el controlador REST</h3>
+<p>El controlador expone la API: cada método responde a un verbo HTTP sobre la ruta <code>/productos</code>. Fíjense en los códigos de estado: 201 al crear, 204 al borrar, 404 si el producto no existe.</p>
+<figure class="code"><div class="code-head"><span class="code-path">src/main/java/co/edu/ufps/catalogo/ProductoController.java</span><button class="copy" type="button" data-target="c5">Copiar</button></div><pre id="c5"><code>package co.edu.ufps.catalogo;
+
+import java.util.List;
+
+import jakarta.validation.Valid;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+
+@RestController
+@RequestMapping("/productos")
+public class ProductoController {
+
+    private final ProductoRepository repositorio;
+
+    public ProductoController(ProductoRepository repositorio) {
+        this.repositorio = repositorio;
+    }
+
+    // GET /productos
+    @GetMapping
+    public List&lt;Producto&gt; listar() {
+        return repositorio.findAll();
+    }
+
+    // GET /productos/1
+    @GetMapping("/{id}")
+    public Producto obtener(@PathVariable("id") Long id) {
+        return repositorio.findById(id)
+                .orElseThrow(() -&gt; new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Producto " + id + " no encontrado"));
+    }
+
+    // POST /productos
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public Producto crear(@Valid @RequestBody Producto producto) {
+        producto.setId(null);
+        return repositorio.save(producto);
+    }
+
+    // PUT /productos/1
+    @PutMapping("/{id}")
+    public Producto actualizar(@PathVariable("id") Long id, @Valid @RequestBody Producto datos) {
+        Producto producto = obtener(id);
+        producto.setNombre(datos.getNombre());
+        producto.setPrecio(datos.getPrecio());
+        producto.setStock(datos.getStock());
+        return repositorio.save(producto);
+    }
+
+    // DELETE /productos/1
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void eliminar(@PathVariable("id") Long id) {
+        repositorio.delete(obtener(id));
+    }
+}</code></pre></figure>
+
+<label class="check" for="ok-6"><input type="checkbox" id="ok-6" data-step="6"><span><b>Punto de control.</b> El controlador compila sin errores.</span></label></div></article>
+<article class="step" id="paso-7"><div class="step-num" aria-hidden="true">7</div><div class="step-body">
+<h3><span class="sr">Paso 7. </span>Carguen datos de ejemplo</h3>
+<p>Creen el archivo <code>data.sql</code> en <code>src/main/resources</code>. Spring lo ejecuta al arrancar, después de crear las tablas.</p>
+<figure class="code"><div class="code-head"><span class="code-path">src/main/resources/data.sql</span><button class="copy" type="button" data-target="c6">Copiar</button></div><pre id="c6"><code>INSERT INTO producto (nombre, precio, stock) VALUES ('Cafe de Santander 500 g', 18000, 20);
+INSERT INTO producto (nombre, precio, stock) VALUES ('Arepas boyacenses x5', 9500, 15);
+INSERT INTO producto (nombre, precio, stock) VALUES ('Bocadillo x12', 7000, 0);</code></pre></figure>
+<p class="tip">El tercer producto tiene stock 0 a propósito. Lo usaremos más adelante.</p>
+
+<label class="check" for="ok-7"><input type="checkbox" id="ok-7" data-step="7"><span><b>Punto de control.</b> El archivo está en <code>src/main/resources</code>, al lado de <code>application.properties</code>.</span></label></div></article>
+<article class="step" id="paso-8"><div class="step-num" aria-hidden="true">8</div><div class="step-body">
+<h3><span class="sr">Paso 8. </span>Reinicien y prueben Catálogo</h3>
+<p>Detengan el servicio con <kbd>Ctrl</kbd> + <kbd>C</kbd> y vuelvan a ejecutar <code>.\mvnw.cmd spring-boot:run</code>. Luego abran en el navegador:</p>
+<ul class="urls">
+<li><a href="http://localhost:8081/productos" target="_blank" rel="noopener">http://localhost:8081/productos</a> <span>lista los 3 productos</span></li>
+<li><a href="http://localhost:8081/productos/1" target="_blank" rel="noopener">http://localhost:8081/productos/1</a> <span>un producto</span></li>
+<li><a href="http://localhost:8081/productos/99" target="_blank" rel="noopener">http://localhost:8081/productos/99</a> <span>error 404</span></li>
+</ul>
+<p>Para crear, actualizar y borrar, abran <b>otra</b> ventana de PowerShell (la primera está ocupada con el servicio) y prueben uno por uno:</p>
+<figure class="code"><div class="code-head"><span class="code-path">Crear (201)</span><button class="copy" type="button" data-target="c7">Copiar</button></div><pre id="c7"><code>Invoke-RestMethod -Method Post -Uri http://localhost:8081/productos -ContentType "application/json" -Body '{"nombre":"Panela x2","precio":6000,"stock":30}'</code></pre></figure>
+<figure class="code"><div class="code-head"><span class="code-path">Actualizar (200)</span><button class="copy" type="button" data-target="c8">Copiar</button></div><pre id="c8"><code>Invoke-RestMethod -Method Put -Uri http://localhost:8081/productos/1 -ContentType "application/json" -Body '{"nombre":"Cafe de Santander 500 g","precio":19500,"stock":18}'</code></pre></figure>
+<figure class="code"><div class="code-head"><span class="code-path">Borrar (204)</span><button class="copy" type="button" data-target="c9">Copiar</button></div><pre id="c9"><code>Invoke-RestMethod -Method Delete -Uri http://localhost:8081/productos/2</code></pre></figure>
+<figure class="code"><div class="code-head"><span class="code-path">Datos inválidos (400)</span><button class="copy" type="button" data-target="c10">Copiar</button></div><pre id="c10"><code>Invoke-RestMethod -Method Post -Uri http://localhost:8081/productos -ContentType "application/json" -Body '{"nombre":"","precio":-5,"stock":3}'</code></pre></figure>
+<p class="tip">Si en la sala hay Postman, también pueden usarlo. Escriban los textos sin tildes para evitar problemas de codificación en PowerShell.</p>
+
+<label class="check" for="ok-8"><input type="checkbox" id="ok-8" data-step="8"><span><b>Punto de control.</b> Crear, actualizar y borrar funcionan, y el producto inválido devuelve un error 400.</span></label></div></article>
+</section>
+<section class="part" id="parte-b"><header class="part-head"><p class="part-tag">Parte B</p><h2>Servicio de Pedidos</h2><p>Un segundo servicio que le pregunta a Catálogo antes de guardar.</p></header>
+<article class="step" id="paso-9"><div class="step-num" aria-hidden="true">9</div><div class="step-body">
+<h3><span class="sr">Paso 9. </span>Generen el proyecto Pedidos</h3>
+<p>Vuelvan a <a href="https://start.spring.io" target="_blank" rel="noopener">start.spring.io</a> con la misma configuración, pero con Artifact <code>pedidos</code>. Mismas cuatro dependencias. Descompriman al lado de <code>catalogo</code>, no adentro.</p>
+<p>Reemplacen su <code>application.properties</code>. Fíjense en la última línea: Pedidos sabe dónde está Catálogo por configuración, no por código.</p>
+<figure class="code"><div class="code-head"><span class="code-path">src/main/resources/application.properties</span><button class="copy" type="button" data-target="c11">Copiar</button></div><pre id="c11"><code>spring.application.name=pedidos
+server.port=8082
+
+# Base de datos propia de este servicio (en memoria)
+spring.datasource.url=jdbc:h2:mem:pedidos
+spring.jpa.show-sql=true
+
+server.error.include-message=always
+
+# Dónde está el servicio de Catálogo
+catalogo.url=http://localhost:8081</code></pre></figure>
+
+<label class="check" for="ok-9"><input type="checkbox" id="ok-9" data-step="9"><span><b>Punto de control.</b> Tienen la carpeta <code>pedidos</code> con el puerto 8082 configurado.</span></label></div></article>
+<article class="step" id="paso-10"><div class="step-num" aria-hidden="true">10</div><div class="step-body">
+<h3><span class="sr">Paso 10. </span>Creen la entidad y el repositorio de Pedido</h3>
+<p>Pedidos tiene su propia base de datos. Guarda una copia del nombre del producto en el momento de la compra: ese dato histórico le pertenece.</p>
+<figure class="code"><div class="code-head"><span class="code-path">src/main/java/co/edu/ufps/pedidos/Pedido.java</span><button class="copy" type="button" data-target="c12">Copiar</button></div><pre id="c12"><code>package co.edu.ufps.pedidos;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+
+@Entity
+public class Pedido {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private Long productoId;
+    private String nombreProducto;   // copia propia del dato de Catálogo
+    private Integer cantidad;
+    private Double total;
+    private String estado;
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public Long getProductoId() { return productoId; }
+    public void setProductoId(Long productoId) { this.productoId = productoId; }
+
+    public String getNombreProducto() { return nombreProducto; }
+    public void setNombreProducto(String nombreProducto) { this.nombreProducto = nombreProducto; }
+
+    public Integer getCantidad() { return cantidad; }
+    public void setCantidad(Integer cantidad) { this.cantidad = cantidad; }
+
+    public Double getTotal() { return total; }
+    public void setTotal(Double total) { this.total = total; }
+
+    public String getEstado() { return estado; }
+    public void setEstado(String estado) { this.estado = estado; }
+}</code></pre></figure>
+<figure class="code"><div class="code-head"><span class="code-path">src/main/java/co/edu/ufps/pedidos/PedidoRepository.java</span><button class="copy" type="button" data-target="c13">Copiar</button></div><pre id="c13"><code>package co.edu.ufps.pedidos;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface PedidoRepository extends JpaRepository&lt;Pedido, Long&gt; {
+}</code></pre></figure>
+
+<label class="check" for="ok-10"><input type="checkbox" id="ok-10" data-step="10"><span><b>Punto de control.</b> Ambas clases compilan.</span></label></div></article>
+<article class="step" id="paso-11"><div class="step-num" aria-hidden="true">11</div><div class="step-body">
+<h3><span class="sr">Paso 11. </span>Creen los objetos de transferencia</h3>
+<p>Pedidos no usa la entidad de Catálogo: define su propia vista del producto con solo los campos que necesita. Así, si Catálogo cambia su tabla, Pedidos no se rompe.</p>
+<figure class="code"><div class="code-head"><span class="code-path">src/main/java/co/edu/ufps/pedidos/ProductoDTO.java</span><button class="copy" type="button" data-target="c14">Copiar</button></div><pre id="c14"><code>package co.edu.ufps.pedidos;
+
+// Lo que Pedidos necesita saber de un producto. No es la entidad de Catálogo.
+public record ProductoDTO(Long id, String nombre, Double precio, Integer stock) {
+}</code></pre></figure>
+<figure class="code"><div class="code-head"><span class="code-path">src/main/java/co/edu/ufps/pedidos/NuevoPedido.java</span><button class="copy" type="button" data-target="c15">Copiar</button></div><pre id="c15"><code>package co.edu.ufps.pedidos;
+
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+
+// Lo que el cliente envía para crear un pedido
+public record NuevoPedido(@NotNull Long productoId, @NotNull @Positive Integer cantidad) {
+}</code></pre></figure>
+
+<label class="check" for="ok-11"><input type="checkbox" id="ok-11" data-step="11"><span><b>Punto de control.</b> Los dos <code>record</code> compilan.</span></label></div></article>
+<article class="step" id="paso-12"><div class="step-num" aria-hidden="true">12</div><div class="step-body">
+<h3><span class="sr">Paso 12. </span>Creen el cliente que llama a Catálogo</h3>
+<p>Aquí ocurre la comunicación entre microservicios: una llamada HTTP síncrona de un servicio a otro.</p>
+<figure class="code"><div class="code-head"><span class="code-path">src/main/java/co/edu/ufps/pedidos/CatalogoClient.java</span><button class="copy" type="button" data-target="c16">Copiar</button></div><pre id="c16"><code>package co.edu.ufps.pedidos;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClient;
+
+@Component
+public class CatalogoClient {
+
+    private final RestClient restClient;
+
+    public CatalogoClient(@Value("${catalogo.url}") String catalogoUrl) {
+        this.restClient = RestClient.create(catalogoUrl);
+    }
+
+    // Llamada síncrona: GET http://localhost:8081/productos/{id}
+    public ProductoDTO obtenerProducto(Long id) {
+        return restClient.get()
+                .uri("/productos/{id}", id)
+                .retrieve()
+                .body(ProductoDTO.class);
+    }
+}</code></pre></figure>
+
+<label class="check" for="ok-12"><input type="checkbox" id="ok-12" data-step="12"><span><b>Punto de control.</b> La clase compila.</span></label></div></article>
+<article class="step" id="paso-13"><div class="step-num" aria-hidden="true">13</div><div class="step-body">
+<h3><span class="sr">Paso 13. </span>Creen el controlador de Pedidos</h3>
+<p>Antes de guardar, Pedidos le pregunta a Catálogo si el producto existe y si hay stock. Lean los tres <code>throw</code>: cada uno traduce un problema a un código HTTP distinto.</p>
+<figure class="code"><div class="code-head"><span class="code-path">src/main/java/co/edu/ufps/pedidos/PedidoController.java</span><button class="copy" type="button" data-target="c17">Copiar</button></div><pre id="c17"><code>package co.edu.ufps.pedidos;
+
+import java.util.List;
+
+import jakarta.validation.Valid;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.server.ResponseStatusException;
+
+@RestController
+@RequestMapping("/pedidos")
+public class PedidoController {
+
+    private final PedidoRepository repositorio;
+    private final CatalogoClient catalogo;
+
+    public PedidoController(PedidoRepository repositorio, CatalogoClient catalogo) {
+        this.repositorio = repositorio;
+        this.catalogo = catalogo;
+    }
+
+    @GetMapping
+    public List&lt;Pedido&gt; listar() {
+        return repositorio.findAll();
+    }
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public Pedido crear(@Valid @RequestBody NuevoPedido solicitud) {
+        ProductoDTO producto;
+        try {
+            producto = catalogo.obtenerProducto(solicitud.productoId());
+        } catch (HttpClientErrorException.NotFound e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "El producto " + solicitud.productoId() + " no existe");
+        } catch (ResourceAccessException e) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                    "El servicio de catalogo no responde");
+        }
+
+        if (producto.stock() &lt; solicitud.cantidad()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Stock insuficiente: quedan " + producto.stock());
+        }
+
+        Pedido pedido = new Pedido();
+        pedido.setProductoId(producto.id());
+        pedido.setNombreProducto(producto.nombre());
+        pedido.setCantidad(solicitud.cantidad());
+        pedido.setTotal(producto.precio() * solicitud.cantidad());
+        pedido.setEstado("CREADO");
+        return repositorio.save(pedido);
+    }
+}</code></pre></figure>
+
+<label class="check" for="ok-13"><input type="checkbox" id="ok-13" data-step="13"><span><b>Punto de control.</b> El controlador compila.</span></label></div></article>
+<article class="step" id="paso-14"><div class="step-num" aria-hidden="true">14</div><div class="step-body">
+<h3><span class="sr">Paso 14. </span>Corran los dos servicios y prueben</h3>
+<p>Necesitan <b>tres</b> ventanas de PowerShell: una con Catálogo corriendo, otra con Pedidos (<code>.\mvnw.cmd spring-boot:run</code> desde la carpeta <code>pedidos</code>) y una tercera para las pruebas.</p>
+<figure class="code"><div class="code-head"><span class="code-path">Pedido válido (201)</span><button class="copy" type="button" data-target="c18">Copiar</button></div><pre id="c18"><code>Invoke-RestMethod -Method Post -Uri http://localhost:8082/pedidos -ContentType "application/json" -Body '{"productoId":1,"cantidad":2}'</code></pre></figure>
+<figure class="code"><div class="code-head"><span class="code-path">Producto que no existe (400)</span><button class="copy" type="button" data-target="c19">Copiar</button></div><pre id="c19"><code>Invoke-RestMethod -Method Post -Uri http://localhost:8082/pedidos -ContentType "application/json" -Body '{"productoId":99,"cantidad":1}'</code></pre></figure>
+<figure class="code"><div class="code-head"><span class="code-path">Producto sin stock (409)</span><button class="copy" type="button" data-target="c20">Copiar</button></div><pre id="c20"><code>Invoke-RestMethod -Method Post -Uri http://localhost:8082/pedidos -ContentType "application/json" -Body '{"productoId":3,"cantidad":1}'</code></pre></figure>
+<p>Revisen los pedidos guardados en <a href="http://localhost:8082/pedidos" target="_blank" rel="noopener">http://localhost:8082/pedidos</a>.</p>
+
+<label class="check" for="ok-14"><input type="checkbox" id="ok-14" data-step="14"><span><b>Punto de control.</b> El pedido válido devuelve un total calculado con el precio que vino de Catálogo.</span></label></div></article>
+<article class="step" id="paso-15"><div class="step-num" aria-hidden="true">15</div><div class="step-body">
+<h3><span class="sr">Paso 15. </span>Experimento: apaguen Catálogo</h3>
+<p>Detengan Catálogo con <kbd>Ctrl</kbd> + <kbd>C</kbd>, dejen Pedidos corriendo y vuelvan a crear un pedido válido.</p>
+<figure class="code"><div class="code-head"><span class="code-path">Con Catálogo apagado (503)</span><button class="copy" type="button" data-target="c21">Copiar</button></div><pre id="c21"><code>Invoke-RestMethod -Method Post -Uri http://localhost:8082/pedidos -ContentType "application/json" -Body '{"productoId":1,"cantidad":2}'</code></pre></figure>
+<p>Respondan en pareja, en una hoja o en el chat del curso:</p>
+<ol class="qs">
+<li>¿Qué le pasa a Pedidos cuando Catálogo no está? ¿Se cae también?</li>
+<li>¿Qué pasaría si Catálogo no estuviera caído, sino muy lento?</li>
+<li>Pedidos no descuenta el stock de Catálogo. ¿Quién debería hacerlo y qué pasa si falla después de guardar el pedido?</li>
+</ol>
+
+<label class="check" for="ok-15"><input type="checkbox" id="ok-15" data-step="15"><span><b>Punto de control.</b> Pedidos responde 503 con el mensaje "El servicio de catalogo no responde" y sigue funcionando.</span></label></div></article>
+</section>
+
+<section class="part" id="retos"><header class="part-head"><p class="part-tag">Si terminan antes</p><h2>Retos</h2></header>
+<div class="retos">
+<article><h3>Buscar por nombre</h3><p>Agreguen este método al repositorio de Catálogo. Spring escribe la consulta a partir del nombre del método.</p>
+<figure class="code"><div class="code-head"><span class="code-path">ProductoRepository.java (agregar)</span><button class="copy" type="button" data-target="c22">Copiar</button></div><pre id="c22"><code>    List&lt;Producto&gt; findByNombreContainingIgnoreCase(String nombre);</code></pre></figure>
+<p>Y cambien <code>listar</code> en el controlador (importen <code>RequestParam</code>):</p>
+<figure class="code"><div class="code-head"><span class="code-path">ProductoController.java (reemplazar listar)</span><button class="copy" type="button" data-target="c23">Copiar</button></div><pre id="c23"><code>    // GET /productos  y  GET /productos?nombre=cafe
+    @GetMapping
+    public List&lt;Producto&gt; listar(@RequestParam(name = "nombre", required = false) String nombre) {
+        if (nombre != null) {
+            return repositorio.findByNombreContainingIgnoreCase(nombre);
+        }
+        return repositorio.findAll();
+    }</code></pre></figure>
+<p>Prueben <a href="http://localhost:8081/productos?nombre=cafe" target="_blank" rel="noopener">http://localhost:8081/productos?nombre=cafe</a>.</p></article>
+<article><h3>Un servicio de su proyecto</h3><p>Repitan la Parte A con una entidad de su propio proyecto de clase: el servicio que hoy les parezca más importante. Ese es el punto de partida del trabajo de las próximas semanas.</p></article>
+</div></section>
+
+  <section class="deliver" id="entrega">
+    <h2>Antes de salir, muestren al docente</h2>
+    <ol>
+      <li>La lista de productos en el navegador.</li>
+      <li>Un pedido creado con su total calculado (respuesta 201).</li>
+      <li>El error 503 con Catálogo apagado.</li>
+      <li>Sus respuestas a las tres preguntas del experimento.</li>
+    </ol>
+    <p>Si no alcanzan a terminar en clase, tomen captura de pantalla de lo que lleven y envíenla por el canal del curso.</p>
+  </section>
+
+  <section class="trouble" id="ayuda">
+    <h2>Si algo falla</h2>
+    <dl><div class="err"><dt><code>mvnw.cmd</code> dice que no encuentra Java o JAVA_HOME</dt><dd>Busquen dónde está instalado el JDK (normalmente <code>C:\Program Files\Java\…</code>) y en esa misma ventana ejecuten <code>$env:JAVA_HOME="C:\Program Files\Java\jdk-21"</code> con la ruta real.</dd></div><div class="err"><dt><code>Port 8081 was already in use</code></dt><dd>Ya hay otra copia del servicio corriendo. Ciérrenla con <kbd>Ctrl</kbd> + <kbd>C</kbd> o cierren esa ventana de PowerShell.</dd></div><div class="err"><dt><code>Table "PRODUCTO" not found</code> al arrancar</dt><dd>Falta la línea <code>spring.jpa.defer-datasource-initialization=true</code> en <code>application.properties</code> de Catálogo.</dd></div><div class="err"><dt>La URL responde 404 aunque el servicio arrancó</dt><dd>El controlador no está en el mismo paquete que la clase <code>…Application</code>. Revisen la línea <code>package</code> de cada archivo.</dd></div><div class="err"><dt>Pedidos responde 503 con Catálogo encendido</dt><dd>Verifiquen que Catálogo corre en el 8081 y que <code>catalogo.url</code> en Pedidos dice <code>http://localhost:8081</code>.</dd></div><div class="err"><dt>La primera ejecución tarda mucho</dt><dd>Es la descarga de dependencias, una sola vez por proyecto. Si toda la sala descarga a la vez, la red se pone lenta: avancen escribiendo las clases.</dd></div></dl>
+  </section>
+</main>
+
+<script>
+(function(){
+  var KEY='lab-microservicio-1';
+  var boxes=[].slice.call(document.querySelectorAll('input[data-step]'));
+  var saved={};
+  try{ saved=JSON.parse(localStorage.getItem(KEY)||'{}')||{}; }catch(e){ saved={}; }
+  function render(){
+    var n=0;
+    boxes.forEach(function(b){
+      var art=document.getElementById('paso-'+b.dataset.step);
+      if(b.checked){n++; art&&art.classList.add('done');} else { art&&art.classList.remove('done'); }
+    });
+    document.getElementById('count').textContent=n;
+    document.getElementById('fill').style.width=(100*n/boxes.length)+'%';
+  }
+  boxes.forEach(function(b){
+    b.checked=!!saved[b.dataset.step];
+    b.addEventListener('change',function(){
+      saved[b.dataset.step]=b.checked;
+      try{ localStorage.setItem(KEY,JSON.stringify(saved)); }catch(e){}
+      render();
+    });
+  });
+  render();
+
+  document.querySelectorAll('.copy').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var pre=document.getElementById(btn.dataset.target);
+      var text=pre.innerText;
+      function done(){ btn.textContent='Copiado'; btn.classList.add('ok'); setTimeout(function(){btn.textContent='Copiar';btn.classList.remove('ok');},1600); }
+      function fallback(){
+        var r=document.createRange(); r.selectNodeContents(pre);
+        var s=window.getSelection(); s.removeAllRanges(); s.addRange(r);
+        btn.textContent='Seleccionado: Ctrl+C';
+        setTimeout(function(){btn.textContent='Copiar';},2500);
+      }
+      try{
+        if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(done,fallback); }
+        else fallback();
+      }catch(e){ fallback(); }
+    });
+  });
+})();
+</script>
+
+</body></html>
