@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Taller de Docker para microservicios</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: una columna de lectura (~46rem) con pasos numerados en un riel izquierdo; barra de avance fija arriba. */
+:root{
+  --bg:#F5F7FA; --surface:#FFFFFF; --ink:#16202E; --muted:#556273; --line:#D5DCE5;
+  --accent:#B01E2F; --accent-soft:#F8E6E8; --blue:#22598C; --blue-soft:#E3ECF6;
+  --ok:#2E7D4F; --ok-soft:#E3F1E8;
+  --code-bg:#EEF2F7; --code-ink:#1B2736; --code-head:#E2E8F0;
+  --f-display:"Archivo","Arial Narrow",Arial,sans-serif;
+  --f-body:"Atkinson Hyperlegible",Verdana,system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",Consolas,"Courier New",monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121A23; --surface:#1A2430; --ink:#E7ECF2; --muted:#9AA8B8; --line:#2D3A49;
+    --accent:#E8697A; --accent-soft:#3A2128; --blue:#7DB0E0; --blue-soft:#1C2D3F;
+    --ok:#6CC495; --ok-soft:#173327;
+    --code-bg:#0E151D; --code-ink:#D9E2EC; --code-head:#16212C; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121A23; --surface:#1A2430; --ink:#E7ECF2; --muted:#9AA8B8; --line:#2D3A49;
+  --accent:#E8697A; --accent-soft:#3A2128; --blue:#7DB0E0; --blue-soft:#1C2D3F;
+  --ok:#6CC495; --ok-soft:#173327;
+  --code-bg:#0E151D; --code-ink:#D9E2EC; --code-head:#16212C; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.6}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+a{color:var(--blue);text-underline-offset:2px}
+a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:4px}
+code,kbd{font-family:var(--f-mono);font-size:.86em}
+p code,li code,dd code,dt code,label code{background:var(--code-bg);padding:.08em .35em;border-radius:4px;overflow-wrap:anywhere}
+kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 .35em;background:var(--surface)}
+h1,h2,h3{font-family:var(--f-display);line-height:1.15;text-wrap:balance;margin:0}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+.progress{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.progress-in{max-width:52rem;margin:0 auto;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;align-items:center;gap:14px;font-size:14px}
+.progress-in b{font-family:var(--f-display);font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.bar{flex:1;height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.bar span{display:block;height:100%;width:0;background:var(--ok);transition:width .3s}
+@media (prefers-reduced-motion: reduce){.bar span{transition:none}}
+.progress nav{display:flex;gap:12px;white-space:nowrap}
+.progress nav a{color:var(--muted);text-decoration:none}
+.progress nav a:hover{color:var(--ink)}
+
+main{max-width:52rem;margin:0 auto;padding-block:40px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:56px}
+
+.intro{display:grid;gap:18px}
+.course{color:var(--muted);font-size:15px;margin:0}
+.intro h1{font-size:clamp(2.1rem,5vw,3.1rem);font-weight:800;font-stretch:88%}
+.lead{font-size:19px;max-width:40rem;margin:0}
+.diagram{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;overflow-x:auto}
+.diagram svg{display:block;width:100%;min-width:520px;height:auto}
+.d-box{fill:var(--blue-soft);stroke:var(--blue);stroke-width:2}
+.d-db{fill:var(--surface);stroke:var(--ink);stroke-width:2}
+.d-client{fill:var(--surface);stroke:var(--ink);stroke-width:2}
+.d-line{stroke:var(--muted);stroke-width:2;fill:none}
+.d-call{stroke:var(--accent);stroke-width:2.5;fill:none}
+.d-t{fill:var(--ink);font-family:var(--f-body);font-size:15px}
+.d-tb{fill:var(--ink);font-family:var(--f-display);font-weight:700;font-size:17px}
+.d-port{fill:var(--blue);font-family:var(--f-mono);font-size:13px}
+.d-red{fill:var(--accent);font-family:var(--f-mono);font-size:13px}
+.d-mut{fill:var(--muted);font-family:var(--f-body);font-size:13px}
+.d-arrow{fill:var(--muted)} .d-arrow-r{fill:var(--accent)}
+
+.before{display:grid;grid-template-columns:repeat(auto-fit,minmax(14rem,1fr));gap:14px}
+.before div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.before h3{font-size:17px;margin-bottom:4px}
+.before p{margin:0;font-size:15.5px}
+
+.part{display:flex;flex-direction:column;gap:30px}
+.part-head{border-top:3px solid var(--ink);padding-top:14px}
+.part-tag{margin:0 0 2px;color:var(--accent);font-family:var(--f-display);font-weight:700;font-size:15px;letter-spacing:.02em}
+.part-head h2{font-size:clamp(1.6rem,3.6vw,2.1rem);font-weight:800;font-stretch:92%}
+.part-head p:last-child{margin:6px 0 0;color:var(--muted)}
+
+.step{display:grid;grid-template-columns:44px 1fr;gap:16px}
+.step-num{width:40px;height:40px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-family:var(--f-display);font-weight:800;font-size:18px;font-variant-numeric:tabular-nums}
+.step.done .step-num{background:var(--ok)}
+.step-body{min-width:0;display:flex;flex-direction:column;gap:12px}
+.step-body h3{font-size:22px;font-weight:700;padding-top:6px}
+.step-body p{margin:0}
+.tip{font-size:15.5px;color:var(--muted);border-left:3px solid var(--line);padding-left:12px}
+
+dl.form{display:grid;grid-template-columns:max-content 1fr;gap:6px 18px;margin:0;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+dl.form dt{font-family:var(--f-mono);font-size:14px;color:var(--muted);padding-top:2px}
+dl.form dd{margin:0;min-width:0}
+@media (max-width:520px){dl.form{grid-template-columns:1fr}dl.form dd{margin-bottom:6px}}
+
+.code{margin:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--code-bg)}
+.code-head{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--code-head);padding:6px 8px 6px 14px;border-bottom:1px solid var(--line)}
+.code-path{font-family:var(--f-mono);font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.copy{font:600 13px var(--f-body);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:4px 12px;cursor:pointer;flex:none}
+.copy:hover{border-color:var(--blue)}
+.copy.ok{background:var(--ok-soft);border-color:var(--ok);color:var(--ok)}
+.code pre{margin:0;padding:14px 16px;overflow-x:auto;font-family:var(--f-mono);font-size:13.5px;line-height:1.55;color:var(--code-ink);tab-size:4}
+
+.urls{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.urls li{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline}
+.urls a{font-family:var(--f-mono);font-size:14.5px;word-break:break-all}
+.urls span{color:var(--muted);font-size:15px}
+ol.qs{margin:0;padding-left:1.4em;display:grid;gap:6px}
+
+.check{display:flex;gap:12px;align-items:flex-start;background:var(--ok-soft);border:1px solid color-mix(in srgb,var(--ok) 35%,transparent);border-radius:10px;padding:12px 14px;cursor:pointer;font-size:15.5px}
+.check input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--ok);flex:none;cursor:pointer}
+.check b{color:var(--ok)}
+
+.retos{display:grid;gap:22px}
+.retos article{display:flex;flex-direction:column;gap:12px;min-width:0}
+.retos h3{font-size:20px}
+.retos p{margin:0}
+
+.trouble{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px}
+.trouble h2{font-size:24px;margin-bottom:12px}
+.trouble dl{margin:0;display:grid;gap:12px}
+.err{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:6px 20px;padding-top:12px;border-top:1px solid var(--line)}
+.err:first-child{border-top:0;padding-top:0}
+.err dt{font-weight:700}
+.err dd{margin:0}
+@media (max-width:640px){.err{grid-template-columns:1fr}}
+
+.deliver{border:2px solid var(--accent);border-radius:12px;padding:20px;background:var(--accent-soft)}
+.deliver h2{font-size:24px;margin-bottom:10px}
+.deliver ol{margin:0;padding-left:1.4em;display:grid;gap:6px}
+.deliver p{margin:12px 0 0}
+@media (max-width:600px){.progress nav{display:none}.step{grid-template-columns:34px 1fr;gap:12px}.step-num{width:32px;height:32px;font-size:15px}}
+</style>
+<style>.before{grid-template-columns:repeat(auto-fit,minmax(11rem,1fr))} .meta{display:flex;flex-wrap:wrap;gap:8px 22px;margin:0;font-size:15.5px;color:var(--muted)} .meta b{color:var(--ink)}</style>
+
+</head>
+<body>
+<div class="progress" role="region" aria-label="Avance del taller">
+  <div class="progress-in">
+    <b><span id="count">0</span> de 11 pasos</b>
+    <div class="bar" aria-hidden="true"><span id="fill"></span></div>
+    <nav aria-label="Secciones"><a href="#parte-a">Contenedor</a><a href="#parte-b">Compose</a><a href="#entrega">Entrega</a></nav>
+  </div>
+</div>
+<main>
+  <section class="intro">
+    <p class="course">Desarrollo de aplicaciones basadas en microservicios, UFPS · Taller autónomo</p>
+    <h1>Taller de Docker para microservicios</h1>
+    <p class="lead">En el laboratorio anterior construyeron Catálogo y Pedidos y los corrieron a mano, cada uno en su terminal. Hoy los empaquetan en contenedores y levantan el sistema completo con un solo comando. Así se despliegan los microservicios en la industria.</p>
+    <p class="meta"><span><b>Modalidad:</b> en parejas, a su ritmo</span><span><b>Tiempo estimado:</b> 2 a 3 horas</span><span><b>Entrega:</b> en Moodle, antes de la próxima clase</span></p>
+    <div class="diagram">
+<svg viewBox="0 0 760 260" role="img" aria-label="Dentro de la red de Docker Compose, el contenedor de Pedidos llama a http://catalogo:8081. Ambos contenedores publican sus puertos 8081 y 8082 hacia el computador.">
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="d-arrow" d="M0 0L10 5L0 10z"/></marker>
+<marker id="ahr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="d-arrow-r" d="M0 0L10 5L0 10z"/></marker></defs>
+<rect class="d-client" x="265" y="8" width="230" height="40" rx="20"/>
+<text class="d-t" x="380" y="33" text-anchor="middle">Su computador (localhost)</text>
+<path class="d-line" d="M330 48 L200 104" marker-end="url(#ah)"/>
+<path class="d-line" d="M430 48 L560 104" marker-end="url(#ah)"/>
+<text class="d-port" x="235" y="78" text-anchor="end">:8081</text>
+<text class="d-port" x="525" y="78">:8082</text>
+<rect x="40" y="88" width="680" height="160" rx="12" fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="7 6"/>
+<text class="d-mut" x="58" y="236">Red de Docker Compose</text>
+<rect class="d-box" x="90" y="108" width="220" height="80" rx="8"/>
+<text class="d-tb" x="200" y="140" text-anchor="middle">contenedor catalogo</text>
+<text class="d-port" x="200" y="164" text-anchor="middle">Spring Boot + H2</text>
+<rect class="d-box" x="450" y="108" width="220" height="80" rx="8"/>
+<text class="d-tb" x="560" y="140" text-anchor="middle">contenedor pedidos</text>
+<text class="d-port" x="560" y="164" text-anchor="middle">Spring Boot + H2</text>
+<path class="d-call" d="M450 148 L314 148" marker-end="url(#ahr)"/>
+<text class="d-red" x="382" y="138" text-anchor="middle">catalogo:8081</text>
+</svg></div>
+    <div class="before">
+<div><h3>Imagen</h3><p>El paquete inmutable con su aplicación y todo lo que necesita para correr: Java, el jar, la configuración.</p></div>
+<div><h3>Contenedor</h3><p>Una imagen en ejecución. De una imagen pueden correr muchos contenedores iguales.</p></div>
+<div><h3>Dockerfile</h3><p>La receta para construir una imagen, paso a paso.</p></div>
+<div><h3>Compose</h3><p>Un archivo que describe varios contenedores y los levanta juntos, en una misma red.</p></div>
+</div>
+  </section>
+<section class="part" id="parte-a"><header class="part-head"><p class="part-tag">Parte A</p><h2>Un servicio en un contenedor</h2><p>Empaquetar cada servicio en una imagen y correrla.</p></header><article class="step" id="paso-1"><div class="step-num" aria-hidden="true">1</div><div class="step-body">
+<h3><span class="sr">Paso 1. </span>Instalen Docker y verifiquen que funciona</h3>
+<p>Instalen <b>Docker Desktop</b> desde <a href="https://www.docker.com/products/docker-desktop/" target="_blank" rel="noopener">docker.com</a> (Windows, macOS o Linux). En Windows, el instalador puede pedir activar WSL 2 y reiniciar: acepten. Abran Docker Desktop y esperen a que diga que está corriendo.</p>
+<p>En una terminal (PowerShell o Terminal):</p>
+<figure class="code"><div class="code-head"><span class="code-path">Terminal</span><button class="copy" type="button" data-target="c1">Copiar</button></div><pre id="c1"><code>docker --version
+docker compose version
+docker run hello-world</code></pre></figure>
+<p class="tip">Si su computador no soporta Docker Desktop, usen <a href="https://labs.play-with-docker.com/" target="_blank" rel="noopener">Play with Docker</a> con una cuenta gratuita de Docker Hub. Funciona en el navegador; suben sus carpetas con git.</p>
+
+<label class="check" for="ok-1"><input type="checkbox" id="ok-1" data-step="1"><span><b>Punto de control.</b> <code>hello-world</code> imprime "Hello from Docker!".</span></label></div></article><article class="step" id="paso-2"><div class="step-num" aria-hidden="true">2</div><div class="step-body">
+<h3><span class="sr">Paso 2. </span>Organicen la carpeta del taller</h3>
+<p>Partan de los dos proyectos del laboratorio anterior. Pónganlos dentro de una misma carpeta, así:</p>
+<figure class="code"><div class="code-head"><span class="code-path">Estructura</span><button class="copy" type="button" data-target="c2">Copiar</button></div><pre id="c2"><code>taller-docker/
+├── catalogo/        (proyecto Spring Boot, con pom.xml y src/)
+├── pedidos/         (proyecto Spring Boot, con pom.xml y src/)
+└── compose.yaml     (lo crean en el paso 9)</code></pre></figure>
+<p>Antes de seguir, comprueben que los dos servicios todavía corren sin Docker, como en el laboratorio.</p>
+<p class="tip">Si no terminaron el laboratorio, háganlo primero. Este taller empaqueta esos dos servicios: sin ellos no hay nada que meter en contenedores.</p>
+
+<label class="check" for="ok-2"><input type="checkbox" id="ok-2" data-step="2"><span><b>Punto de control.</b> Tienen <code>catalogo</code> y <code>pedidos</code> lado a lado, y ambos arrancan con <code>mvnw spring-boot:run</code>.</span></label></div></article><article class="step" id="paso-3"><div class="step-num" aria-hidden="true">3</div><div class="step-body">
+<h3><span class="sr">Paso 3. </span>Escriban el Dockerfile de Catálogo</h3>
+<p>Un <b>Dockerfile</b> es la receta para construir una imagen. Este tiene dos etapas: la primera compila con Maven y la segunda copia solo el <code>.jar</code> a una imagen pequeña que solo tiene Java. Así la imagen final no carga Maven ni el código fuente.</p>
+<p>Creen un archivo llamado exactamente <code>Dockerfile</code> (sin extensión) dentro de <code>catalogo/</code>:</p>
+<figure class="code"><div class="code-head"><span class="code-path">catalogo/Dockerfile</span><button class="copy" type="button" data-target="c3">Copiar</button></div><pre id="c3"><code># Etapa 1: compilar el proyecto con Maven
+FROM maven:3.9-eclipse-temurin-21 AS build
+WORKDIR /app
+COPY pom.xml .
+RUN mvn -B dependency:go-offline
+COPY src ./src
+RUN mvn -B -DskipTests package
+
+# Etapa 2: imagen liviana solo con Java para ejecutar
+FROM eclipse-temurin:21-jre
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
+EXPOSE 8081
+ENTRYPOINT ["java", "-jar", "app.jar"]</code></pre></figure>
+<p>Y un archivo <code>.dockerignore</code> al lado, para no copiar la carpeta de compilación local:</p>
+<figure class="code"><div class="code-head"><span class="code-path">catalogo/.dockerignore</span><button class="copy" type="button" data-target="c4">Copiar</button></div><pre id="c4"><code>target/
+.idea/
+.vscode/
+*.iml</code></pre></figure>
+<p class="tip">Si su proyecto usa Java 17 (revisen <code>&lt;java.version&gt;</code> en el <code>pom.xml</code>), cambien <code>21</code> por <code>17</code> en las dos líneas <code>FROM</code>.</p>
+
+<label class="check" for="ok-3"><input type="checkbox" id="ok-3" data-step="3"><span><b>Punto de control.</b> El <code>Dockerfile</code> y el <code>.dockerignore</code> están dentro de <code>catalogo/</code>, junto al <code>pom.xml</code>.</span></label></div></article><article class="step" id="paso-4"><div class="step-num" aria-hidden="true">4</div><div class="step-body">
+<h3><span class="sr">Paso 4. </span>Construyan la imagen y corran el contenedor</h3>
+<p>Desde la carpeta <code>catalogo</code>:</p>
+<figure class="code"><div class="code-head"><span class="code-path">Terminal</span><button class="copy" type="button" data-target="c5">Copiar</button></div><pre id="c5"><code>docker build -t catalogo .</code></pre></figure>
+<p>La primera vez descarga las imágenes base y las dependencias de Maven: puede tardar varios minutos. Cuando termine, corran un contenedor a partir de esa imagen:</p>
+<figure class="code"><div class="code-head"><span class="code-path">Terminal</span><button class="copy" type="button" data-target="c6">Copiar</button></div><pre id="c6"><code>docker run --rm -p 8081:8081 catalogo</code></pre></figure>
+<p><code>-p 8081:8081</code> conecta el puerto 8081 de su computador con el 8081 del contenedor. Sin eso, el servicio corre pero nadie lo puede alcanzar desde afuera.</p>
+<p>Abran <a href="http://localhost:8081/productos" target="_blank" rel="noopener">http://localhost:8081/productos</a>. Luego deténganlo con <kbd>Ctrl</kbd> + <kbd>C</kbd>.</p>
+
+<label class="check" for="ok-4"><input type="checkbox" id="ok-4" data-step="4"><span><b>Punto de control.</b> Ven los tres productos en el navegador, servidos desde el contenedor y no desde <code>mvnw</code>.</span></label></div></article><article class="step" id="paso-5"><div class="step-num" aria-hidden="true">5</div><div class="step-body">
+<h3><span class="sr">Paso 5. </span>Hagan lo mismo con Pedidos</h3>
+<p>Copien el <code>Dockerfile</code> y el <code>.dockerignore</code> a la carpeta <code>pedidos/</code> y cambien una sola línea:</p>
+<figure class="code"><div class="code-head"><span class="code-path">pedidos/Dockerfile (cambiar)</span><button class="copy" type="button" data-target="c7">Copiar</button></div><pre id="c7"><code>EXPOSE 8082</code></pre></figure>
+<p>Construyan la imagen desde la carpeta <code>pedidos</code>:</p>
+<figure class="code"><div class="code-head"><span class="code-path">Terminal</span><button class="copy" type="button" data-target="c8">Copiar</button></div><pre id="c8"><code>docker build -t pedidos .</code></pre></figure>
+<p>No la corran todavía. El paso siguiente explica por qué.</p>
+
+<label class="check" for="ok-5"><input type="checkbox" id="ok-5" data-step="5"><span><b>Punto de control.</b> <code>docker images</code> muestra las imágenes <code>catalogo</code> y <code>pedidos</code>.</span></label></div></article><article class="step" id="paso-6"><div class="step-num" aria-hidden="true">6</div><div class="step-body">
+<h3><span class="sr">Paso 6. </span>Entiendan por qué localhost ya no sirve</h3>
+<p>En el laboratorio, Pedidos llamaba a <code>http://localhost:8081</code>. Dentro de un contenedor, <b>localhost es el propio contenedor</b>, no su computador. Pedidos buscaría a Catálogo dentro de sí mismo y respondería 503.</p>
+<p>La solución es la red de Docker Compose: cada servicio se alcanza por su nombre. Pedidos llamará a <code>http://catalogo:8081</code>.</p>
+<p>No hay que tocar Java. En el laboratorio la dirección quedó en configuración (<code>catalogo.url</code>), y Spring Boot permite reemplazar cualquier propiedad con una variable de entorno: <code>catalogo.url</code> se escribe <code>CATALOGO_URL</code>. Eso es lo que hará Compose.</p>
+
+<label class="check" for="ok-6"><input type="checkbox" id="ok-6" data-step="6"><span><b>Punto de control.</b> Pueden explicar con sus palabras por qué <code>localhost</code> no funciona entre contenedores.</span></label></div></article></section><section class="part" id="parte-b"><header class="part-head"><p class="part-tag">Parte B</p><h2>Los dos servicios con Docker Compose</h2><p>Levantar el sistema completo con un comando.</p></header><article class="step" id="paso-7"><div class="step-num" aria-hidden="true">7</div><div class="step-body">
+<h3><span class="sr">Paso 7. </span>Escriban el archivo de Compose</h3>
+<p>Docker Compose levanta varios contenedores juntos, en una misma red, con un solo comando. Creen <code>compose.yaml</code> en la carpeta raíz <code>taller-docker/</code>:</p>
+<figure class="code"><div class="code-head"><span class="code-path">taller-docker/compose.yaml</span><button class="copy" type="button" data-target="c9">Copiar</button></div><pre id="c9"><code>services:
+  catalogo:
+    build: ./catalogo
+    ports:
+      - "8081:8081"
+
+  pedidos:
+    build: ./pedidos
+    ports:
+      - "8082:8082"
+    environment:
+      CATALOGO_URL: http://catalogo:8081
+    depends_on:
+      - catalogo</code></pre></figure>
+<p>Lean cada parte: <code>build</code> dice dónde está el Dockerfile, <code>ports</code> publica el puerto, <code>environment</code> cambia la dirección de Catálogo y <code>depends_on</code> arranca Catálogo primero.</p>
+<p class="tip">En YAML la sangría importa: usen espacios, nunca tabulaciones.</p>
+
+<label class="check" for="ok-7"><input type="checkbox" id="ok-7" data-step="7"><span><b>Punto de control.</b> <code>docker compose config</code>, desde <code>taller-docker</code>, muestra el archivo sin errores.</span></label></div></article><article class="step" id="paso-8"><div class="step-num" aria-hidden="true">8</div><div class="step-body">
+<h3><span class="sr">Paso 8. </span>Levanten todo con un comando</h3>
+<p>Detengan cualquier servicio que tengan corriendo con <code>mvnw</code> (si no, los puertos van a estar ocupados). Desde <code>taller-docker</code>:</p>
+<figure class="code"><div class="code-head"><span class="code-path">Terminal</span><button class="copy" type="button" data-target="c10">Copiar</button></div><pre id="c10"><code>docker compose up --build</code></pre></figure>
+<p>Van a ver los registros de los dos servicios mezclados, cada uno con su nombre a la izquierda. Esperen a que ambos digan <code>Started</code>.</p>
+<p>En otra terminal, prueben igual que en el laboratorio. Pueden usar Postman con la colección del laboratorio, o curl:</p>
+<figure class="code"><div class="code-head"><span class="code-path">Pedido válido (201)</span><button class="copy" type="button" data-target="c11">Copiar</button></div><pre id="c11"><code>curl -i -X POST http://localhost:8082/pedidos -H "Content-Type: application/json" -d '{"productoId":1,"cantidad":2}'</code></pre></figure>
+<figure class="code"><div class="code-head"><span class="code-path">Sin stock (409)</span><button class="copy" type="button" data-target="c12">Copiar</button></div><pre id="c12"><code>curl -i -X POST http://localhost:8082/pedidos -H "Content-Type: application/json" -d '{"productoId":3,"cantidad":1}'</code></pre></figure>
+<p class="tip">En Windows PowerShell, si <code>curl</code> se comporta raro, escriban <code>curl.exe</code> o usen <code>Invoke-RestMethod</code> como en la guía del laboratorio.</p>
+
+<label class="check" for="ok-8"><input type="checkbox" id="ok-8" data-step="8"><span><b>Punto de control.</b> El pedido válido responde 201: Pedidos encontró a Catálogo por su nombre dentro de la red de Docker.</span></label></div></article><article class="step" id="paso-9"><div class="step-num" aria-hidden="true">9</div><div class="step-body">
+<h3><span class="sr">Paso 9. </span>Aprendan los comandos del día a día</h3>
+<p>Desde otra terminal, en <code>taller-docker</code>, prueben cada uno:</p>
+<figure class="code"><div class="code-head"><span class="code-path">Terminal</span><button class="copy" type="button" data-target="c13">Copiar</button></div><pre id="c13"><code>docker compose ps                  # qué contenedores corren y en qué puertos
+docker compose logs pedidos        # registros de un solo servicio
+docker compose logs -f catalogo    # seguir los registros en vivo (Ctrl+C para salir)
+docker compose stop catalogo       # detener un servicio
+docker compose start catalogo      # volver a arrancarlo
+docker compose down                # detener y borrar todos los contenedores</code></pre></figure>
+
+<label class="check" for="ok-9"><input type="checkbox" id="ok-9" data-step="9"><span><b>Punto de control.</b> Pueden ver los registros de un solo servicio y saben detener y arrancar uno sin tocar el otro.</span></label></div></article><article class="step" id="paso-10"><div class="step-num" aria-hidden="true">10</div><div class="step-body">
+<h3><span class="sr">Paso 10. </span>Repitan el experimento, ahora en contenedores</h3>
+<p>Con todo arriba (<code>docker compose up</code>), en otra terminal:</p>
+<figure class="code"><div class="code-head"><span class="code-path">Terminal</span><button class="copy" type="button" data-target="c14">Copiar</button></div><pre id="c14"><code>docker compose stop catalogo</code></pre></figure>
+<figure class="code"><div class="code-head"><span class="code-path">Con Catálogo detenido (503)</span><button class="copy" type="button" data-target="c15">Copiar</button></div><pre id="c15"><code>curl -i -X POST http://localhost:8082/pedidos -H "Content-Type: application/json" -d '{"productoId":1,"cantidad":2}'</code></pre></figure>
+<figure class="code"><div class="code-head"><span class="code-path">Terminal</span><button class="copy" type="button" data-target="c16">Copiar</button></div><pre id="c16"><code>docker compose start catalogo</code></pre></figure>
+<p>Esperen a que Catálogo arranque y repitan el pedido: debe volver a funcionar <b>sin reiniciar Pedidos</b>.</p>
+<p>Ahora creen un producto nuevo con <code>POST /productos</code>, reinicien Catálogo con <code>docker compose restart catalogo</code> y vuelvan a listar los productos. ¿Sigue ahí?</p>
+
+<label class="check" for="ok-10"><input type="checkbox" id="ok-10" data-step="10"><span><b>Punto de control.</b> Vieron el 503 con Catálogo detenido, el 201 al volver a arrancarlo, y qué pasó con el producto nuevo tras el reinicio.</span></label></div></article><article class="step" id="paso-11"><div class="step-num" aria-hidden="true">11</div><div class="step-body">
+<h3><span class="sr">Paso 11. </span>Respondan las preguntas de análisis</h3>
+<p>En un documento corto, respondan con sus palabras:</p>
+<ol class="qs">
+<li>¿Por qué Pedidos no puede usar <code>localhost:8081</code> dentro de su contenedor? ¿Qué lo reemplazó?</li>
+<li>¿Qué ventaja tiene haber puesto la dirección de Catálogo en <code>application.properties</code> y no escrita en el código Java?</li>
+<li>¿Por qué el Dockerfile tiene dos etapas? ¿Qué pasaría con el tamaño de la imagen si fuera una sola?</li>
+<li>¿Qué pasó con el producto que crearon después de reiniciar Catálogo? ¿Por qué? ¿Qué se necesitaría para que no se pierda?</li>
+<li><code>depends_on</code> arranca Catálogo antes que Pedidos. ¿Garantiza eso que Catálogo ya esté listo para responder cuando Pedidos recibe su primer pedido?</li>
+</ol>
+
+<label class="check" for="ok-11"><input type="checkbox" id="ok-11" data-step="11"><span><b>Punto de control.</b> Tienen las cinco respuestas escritas.</span></label></div></article></section>
+<section class="part" id="retos"><header class="part-head"><p class="part-tag">Reto opcional</p><h2>Que los datos no se pierdan: PostgreSQL</h2><p>Respuesta práctica a la pregunta 4. Vale como bonificación del taller.</p></header>
+<div class="retos">
+<article><h3>1. Agreguen el controlador de PostgreSQL a Catálogo</h3>
+<p>En <code>catalogo/pom.xml</code>, dentro de <code>&lt;dependencies&gt;</code>:</p><figure class="code"><div class="code-head"><span class="code-path">catalogo/pom.xml (agregar)</span><button class="copy" type="button" data-target="c17">Copiar</button></div><pre id="c17"><code>&lt;dependency&gt;
+    &lt;groupId&gt;org.postgresql&lt;/groupId&gt;
+    &lt;artifactId&gt;postgresql&lt;/artifactId&gt;
+    &lt;scope&gt;runtime&lt;/scope&gt;
+&lt;/dependency&gt;</code></pre></figure></article>
+<article><h3>2. Usen este compose en lugar del anterior</h3>
+<p>Catálogo ahora tiene su propia base de datos PostgreSQL, en su propio contenedor, con un <b>volumen</b> que guarda los datos en disco. Las variables <code>SPRING_DATASOURCE_*</code> reemplazan la configuración de H2 sin tocar <code>application.properties</code>.</p>
+<figure class="code"><div class="code-head"><span class="code-path">taller-docker/compose.yaml (reemplazar)</span><button class="copy" type="button" data-target="c18">Copiar</button></div><pre id="c18"><code>services:
+  catalogo-db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: catalogo
+      POSTGRES_USER: catalogo
+      POSTGRES_PASSWORD: catalogo123
+    volumes:
+      - catalogo-datos:/var/lib/postgresql/data
+
+  catalogo:
+    build: ./catalogo
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://catalogo-db:5432/catalogo
+      SPRING_DATASOURCE_USERNAME: catalogo
+      SPRING_DATASOURCE_PASSWORD: catalogo123
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    depends_on:
+      - catalogo-db
+    restart: on-failure
+
+  pedidos:
+    build: ./pedidos
+    ports:
+      - "8082:8082"
+    environment:
+      CATALOGO_URL: http://catalogo:8081
+    depends_on:
+      - catalogo
+
+volumes:
+  catalogo-datos:</code></pre></figure>
+<figure class="code"><div class="code-head"><span class="code-path">Terminal</span><button class="copy" type="button" data-target="c19">Copiar</button></div><pre id="c19"><code>docker compose down
+docker compose up --build</code></pre></figure></article>
+<article><h3>3. Prueben la persistencia</h3>
+<p>Con PostgreSQL, Spring no ejecuta <code>data.sql</code>, así que el catálogo arranca vacío. Creen dos productos con <code>POST /productos</code>, ejecuten <code>docker compose restart catalogo</code> y listen otra vez: deben seguir ahí. Incluso con <code>docker compose down</code> y <code>up</code> los datos se conservan, porque viven en el volumen. Solo <code>docker compose down -v</code> los borra.</p>
+<p class="tip">Si Catálogo falla al arrancar porque PostgreSQL todavía no está listo, <code>restart: on-failure</code> lo vuelve a intentar solo. Es otra cara de la pregunta 5.</p></article>
+</div></section>
+  <section class="deliver" id="entrega">
+    <h2>Qué entregar en Moodle</h2>
+    <ol>
+      <li>Enlace a su repositorio de GitHub con la carpeta <code>taller-docker</code>: los dos <code>Dockerfile</code>, los dos <code>.dockerignore</code> y el <code>compose.yaml</code>. Si no usan GitHub, un zip <b>sin</b> las carpetas <code>target</code>.</li>
+      <li>Captura de <code>docker compose ps</code> con los dos servicios corriendo.</li>
+      <li>Captura del pedido creado (201) con todo levantado en Compose.</li>
+      <li>Captura del 503 con Catálogo detenido.</li>
+      <li>Documento con las cinco respuestas del paso 11.</li>
+      <li>Opcional: evidencia del reto de PostgreSQL (productos que sobreviven a un reinicio).</li>
+    </ol>
+    <p>Una sola entrega por pareja, con los nombres de ambos integrantes. Si se traban en un paso, entreguen hasta donde llegaron y describan el error que les salió: también cuenta.</p>
+  </section>
+  <section class="trouble" id="ayuda">
+    <h2>Si algo falla</h2>
+    <dl><div class="err"><dt><code>Cannot connect to the Docker daemon</code></dt><dd>Docker Desktop no está abierto. Ábranlo y esperen a que diga que está corriendo.</dd></div><div class="err"><dt><code>Bind for 0.0.0.0:8081 failed: port is already allocated</code></dt><dd>El puerto está ocupado: probablemente el servicio sigue corriendo con <code>mvnw</code> o quedó otro contenedor. Deténganlo, o ejecuten <code>docker compose down</code>.</dd></div><div class="err"><dt><code>release version 21 not supported</code> al construir</dt><dd>Su proyecto usa una versión de Java distinta a la imagen. Igualen el número de las líneas <code>FROM</code> con <code>&lt;java.version&gt;</code> del <code>pom.xml</code>.</dd></div><div class="err"><dt><code>no main manifest attribute</code> o <code>Unable to access jarfile</code></dt><dd>La compilación no generó el jar de Spring Boot. Revisen que el <code>pom.xml</code> tenga el plugin <code>spring-boot-maven-plugin</code> (Spring Initializr lo incluye).</dd></div><div class="err"><dt>Pedidos responde 503 con todo arriba</dt><dd>Revisen que <code>CATALOGO_URL</code> diga <code>http://catalogo:8081</code>, con el mismo nombre del servicio en <code>compose.yaml</code>, y que Catálogo ya haya terminado de arrancar (<code>docker compose logs catalogo</code>).</dd></div><div class="err"><dt>Los cambios en el código no aparecen</dt><dd>Docker usa la imagen ya construida. Ejecuten <code>docker compose up --build</code> para reconstruir.</dd></div><div class="err"><dt>El build tarda muchísimo</dt><dd>La primera vez descarga imágenes y dependencias. Las siguientes son más rápidas porque Docker guarda en caché la capa de <code>dependency:go-offline</code>.</dd></div></dl>
+  </section>
+</main>
+<script>
+(function(){
+  var KEY='taller-docker-1';
+  var boxes=[].slice.call(document.querySelectorAll('input[data-step]'));
+  var saved={};
+  try{ saved=JSON.parse(localStorage.getItem(KEY)||'{}')||{}; }catch(e){ saved={}; }
+  function render(){
+    var n=0;
+    boxes.forEach(function(b){
+      var art=document.getElementById('paso-'+b.dataset.step);
+      if(b.checked){n++; art&&art.classList.add('done');} else { art&&art.classList.remove('done'); }
+    });
+    document.getElementById('count').textContent=n;
+    document.getElementById('fill').style.width=(100*n/boxes.length)+'%';
+  }
+  boxes.forEach(function(b){
+    b.checked=!!saved[b.dataset.step];
+    b.addEventListener('change',function(){
+      saved[b.dataset.step]=b.checked;
+      try{ localStorage.setItem(KEY,JSON.stringify(saved)); }catch(e){}
+      render();
+    });
+  });
+  render();
+
+  document.querySelectorAll('.copy').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var pre=document.getElementById(btn.dataset.target);
+      var text=pre.innerText;
+      function done(){ btn.textContent='Copiado'; btn.classList.add('ok'); setTimeout(function(){btn.textContent='Copiar';btn.classList.remove('ok');},1600); }
+      function fallback(){
+        var r=document.createRange(); r.selectNodeContents(pre);
+        var s=window.getSelection(); s.removeAllRanges(); s.addRange(r);
+        btn.textContent='Seleccionado: Ctrl+C';
+        setTimeout(function(){btn.textContent='Copiar';},2500);
+      }
+      try{
+        if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(done,fallback); }
+        else fallback();
+      }catch(e){ fallback(); }
+    });
+  });
+})();
+</script>
+</body>
+</html>
