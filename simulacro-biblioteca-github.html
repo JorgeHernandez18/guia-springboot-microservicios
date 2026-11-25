@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Simulacro Biblioteca UFPS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: una columna de lectura (~46rem) con pasos numerados en un riel izquierdo; barra de avance fija arriba. */
+:root{
+  --bg:#F5F7FA; --surface:#FFFFFF; --ink:#16202E; --muted:#556273; --line:#D5DCE5;
+  --accent:#B01E2F; --accent-soft:#F8E6E8; --blue:#22598C; --blue-soft:#E3ECF6;
+  --ok:#2E7D4F; --ok-soft:#E3F1E8;
+  --code-bg:#EEF2F7; --code-ink:#1B2736; --code-head:#E2E8F0;
+  --f-display:"Archivo","Arial Narrow",Arial,sans-serif;
+  --f-body:"Atkinson Hyperlegible",Verdana,system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",Consolas,"Courier New",monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121A23; --surface:#1A2430; --ink:#E7ECF2; --muted:#9AA8B8; --line:#2D3A49;
+    --accent:#E8697A; --accent-soft:#3A2128; --blue:#7DB0E0; --blue-soft:#1C2D3F;
+    --ok:#6CC495; --ok-soft:#173327;
+    --code-bg:#0E151D; --code-ink:#D9E2EC; --code-head:#16212C; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121A23; --surface:#1A2430; --ink:#E7ECF2; --muted:#9AA8B8; --line:#2D3A49;
+  --accent:#E8697A; --accent-soft:#3A2128; --blue:#7DB0E0; --blue-soft:#1C2D3F;
+  --ok:#6CC495; --ok-soft:#173327;
+  --code-bg:#0E151D; --code-ink:#D9E2EC; --code-head:#16212C; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.6}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+a{color:var(--blue);text-underline-offset:2px}
+a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:4px}
+code,kbd{font-family:var(--f-mono);font-size:.86em}
+p code,li code,dd code,dt code,label code{background:var(--code-bg);padding:.08em .35em;border-radius:4px;overflow-wrap:anywhere}
+kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 .35em;background:var(--surface)}
+h1,h2,h3{font-family:var(--f-display);line-height:1.15;text-wrap:balance;margin:0}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+.progress{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.progress-in{max-width:52rem;margin:0 auto;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;align-items:center;gap:14px;font-size:14px}
+.progress-in b{font-family:var(--f-display);font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.bar{flex:1;height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.bar span{display:block;height:100%;width:0;background:var(--ok);transition:width .3s}
+@media (prefers-reduced-motion: reduce){.bar span{transition:none}}
+.progress nav{display:flex;gap:12px;white-space:nowrap}
+.progress nav a{color:var(--muted);text-decoration:none}
+.progress nav a:hover{color:var(--ink)}
+
+main{max-width:52rem;margin:0 auto;padding-block:40px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:56px}
+
+.intro{display:grid;gap:18px}
+.course{color:var(--muted);font-size:15px;margin:0}
+.intro h1{font-size:clamp(2.1rem,5vw,3.1rem);font-weight:800;font-stretch:88%}
+.lead{font-size:19px;max-width:40rem;margin:0}
+.diagram{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;overflow-x:auto}
+.diagram svg{display:block;width:100%;min-width:520px;height:auto}
+.d-box{fill:var(--blue-soft);stroke:var(--blue);stroke-width:2}
+.d-db{fill:var(--surface);stroke:var(--ink);stroke-width:2}
+.d-client{fill:var(--surface);stroke:var(--ink);stroke-width:2}
+.d-line{stroke:var(--muted);stroke-width:2;fill:none}
+.d-call{stroke:var(--accent);stroke-width:2.5;fill:none}
+.d-t{fill:var(--ink);font-family:var(--f-body);font-size:15px}
+.d-tb{fill:var(--ink);font-family:var(--f-display);font-weight:700;font-size:17px}
+.d-port{fill:var(--blue);font-family:var(--f-mono);font-size:13px}
+.d-red{fill:var(--accent);font-family:var(--f-mono);font-size:13px}
+.d-mut{fill:var(--muted);font-family:var(--f-body);font-size:13px}
+.d-arrow{fill:var(--muted)} .d-arrow-r{fill:var(--accent)}
+
+.before{display:grid;grid-template-columns:repeat(auto-fit,minmax(14rem,1fr));gap:14px}
+.before div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.before h3{font-size:17px;margin-bottom:4px}
+.before p{margin:0;font-size:15.5px}
+
+.part{display:flex;flex-direction:column;gap:30px}
+.part-head{border-top:3px solid var(--ink);padding-top:14px}
+.part-tag{margin:0 0 2px;color:var(--accent);font-family:var(--f-display);font-weight:700;font-size:15px;letter-spacing:.02em}
+.part-head h2{font-size:clamp(1.6rem,3.6vw,2.1rem);font-weight:800;font-stretch:92%}
+.part-head p:last-child{margin:6px 0 0;color:var(--muted)}
+
+.step{display:grid;grid-template-columns:44px 1fr;gap:16px}
+.step-num{width:40px;height:40px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-family:var(--f-display);font-weight:800;font-size:18px;font-variant-numeric:tabular-nums}
+.step.done .step-num{background:var(--ok)}
+.step-body{min-width:0;display:flex;flex-direction:column;gap:12px}
+.step-body h3{font-size:22px;font-weight:700;padding-top:6px}
+.step-body p{margin:0}
+.tip{font-size:15.5px;color:var(--muted);border-left:3px solid var(--line);padding-left:12px}
+
+dl.form{display:grid;grid-template-columns:max-content 1fr;gap:6px 18px;margin:0;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+dl.form dt{font-family:var(--f-mono);font-size:14px;color:var(--muted);padding-top:2px}
+dl.form dd{margin:0;min-width:0}
+@media (max-width:520px){dl.form{grid-template-columns:1fr}dl.form dd{margin-bottom:6px}}
+
+.code{margin:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--code-bg)}
+.code-head{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--code-head);padding:6px 8px 6px 14px;border-bottom:1px solid var(--line)}
+.code-path{font-family:var(--f-mono);font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.copy{font:600 13px var(--f-body);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:4px 12px;cursor:pointer;flex:none}
+.copy:hover{border-color:var(--blue)}
+.copy.ok{background:var(--ok-soft);border-color:var(--ok);color:var(--ok)}
+.code pre{margin:0;padding:14px 16px;overflow-x:auto;font-family:var(--f-mono);font-size:13.5px;line-height:1.55;color:var(--code-ink);tab-size:4}
+
+.urls{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.urls li{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline}
+.urls a{font-family:var(--f-mono);font-size:14.5px;word-break:break-all}
+.urls span{color:var(--muted);font-size:15px}
+ol.qs{margin:0;padding-left:1.4em;display:grid;gap:6px}
+
+.check{display:flex;gap:12px;align-items:flex-start;background:var(--ok-soft);border:1px solid color-mix(in srgb,var(--ok) 35%,transparent);border-radius:10px;padding:12px 14px;cursor:pointer;font-size:15.5px}
+.check input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--ok);flex:none;cursor:pointer}
+.check b{color:var(--ok)}
+
+.retos{display:grid;gap:22px}
+.retos article{display:flex;flex-direction:column;gap:12px;min-width:0}
+.retos h3{font-size:20px}
+.retos p{margin:0}
+
+.trouble{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px}
+.trouble h2{font-size:24px;margin-bottom:12px}
+.trouble dl{margin:0;display:grid;gap:12px}
+.err{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:6px 20px;padding-top:12px;border-top:1px solid var(--line)}
+.err:first-child{border-top:0;padding-top:0}
+.err dt{font-weight:700}
+.err dd{margin:0}
+@media (max-width:640px){.err{grid-template-columns:1fr}}
+
+.deliver{border:2px solid var(--accent);border-radius:12px;padding:20px;background:var(--accent-soft)}
+.deliver h2{font-size:24px;margin-bottom:10px}
+.deliver ol{margin:0;padding-left:1.4em;display:grid;gap:6px}
+.deliver p{margin:12px 0 0}
+@media (max-width:600px){.progress nav{display:none}.step{grid-template-columns:34px 1fr;gap:12px}.step-num{width:32px;height:32px;font-size:15px}}
+</style>
+<style>
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.tw table{border-collapse:collapse;width:100%;font-size:15.5px}
+.tw th,.tw td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+.tw th{font-family:var(--f-display);color:var(--muted);background:var(--bg)}
+.tw tr:last-child td{border-bottom:0}
+.tw td code{white-space:nowrap}
+table.tests td:last-child,table.rubric td:last-child{font-family:var(--f-display);font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.meta{display:flex;flex-wrap:wrap;gap:8px 22px;margin:0;font-size:15.5px;color:var(--muted)} .meta b{color:var(--ink)}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(14rem,1fr));gap:14px}
+.rules div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.rules h3{font-size:17px;margin-bottom:4px} .rules p{margin:0;font-size:15.5px}
+.rub{display:flex;flex-direction:column;gap:12px}
+.rub h2{font-size:clamp(1.6rem,3.6vw,2.1rem);font-weight:800;font-stretch:92%;border-top:3px solid var(--ink);padding-top:14px}
+</style>
+</head>
+<body>
+<div class="progress" role="region" aria-label="Avance del simulacro"><div class="progress-in">
+<b><span id="count">0</span> de 10 pasos</b><div class="bar" aria-hidden="true"><span id="fill"></span></div>
+<nav aria-label="Secciones"><a href="#parte-1">Libros</a><a href="#parte-4">Préstamos</a><a href="#rubrica">Rúbrica</a></nav></div></div>
+<main>
+<section class="intro">
+<p class="course">Desarrollo de aplicaciones basadas en microservicios, UFPS · Simulacro calificado del examen final</p>
+<h1>Simulacro: Biblioteca UFPS</h1>
+<p class="lead">La biblioteca quiere registrar los préstamos de libros con dos microservicios. Construyan el sistema completo, como lo harían en el examen final: dos servicios, cada uno con su base de datos, comunicados por HTTP y empaquetados con Docker.</p>
+<p class="meta"><span><b>Modalidad:</b> en parejas</span><span><b>Tiempo:</b> 70 minutos</span><span><b>Nota:</b> se califica sobre 5,0 con la rúbrica del final</span></p>
+<div class="diagram"><svg viewBox="0 0 760 210" role="img" aria-label="El estudiante pide un préstamo a Préstamos (8092), que consulta el libro en Libros (8091). Cada servicio tiene su base de datos.">
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="d-arrow" d="M0 0L10 5L0 10z"/></marker>
+<marker id="ahr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="d-arrow-r" d="M0 0L10 5L0 10z"/></marker></defs>
+<rect class="d-client" x="520" y="8" width="180" height="40" rx="20"/><text class="d-t" x="610" y="33" text-anchor="middle">Estudiante</text>
+<path class="d-line" d="M610 48 L610 82" marker-end="url(#ah)"/><text class="d-port" x="620" y="70">POST /prestamos</text>
+<rect class="d-box" x="500" y="85" width="220" height="70" rx="8"/><text class="d-tb" x="610" y="116" text-anchor="middle">Préstamos</text><text class="d-port" x="610" y="138" text-anchor="middle">localhost:8092</text>
+<rect class="d-box" x="60" y="85" width="220" height="70" rx="8"/><text class="d-tb" x="170" y="116" text-anchor="middle">Libros</text><text class="d-port" x="170" y="138" text-anchor="middle">localhost:8091</text>
+<path class="d-call" d="M500 120 L284 120" marker-end="url(#ahr)"/><text class="d-red" x="392" y="110" text-anchor="middle">GET /libros/{id}</text>
+<line class="d-line" x1="170" y1="155" x2="170" y2="170"/><line class="d-line" x1="610" y1="155" x2="610" y2="170"/>
+<path class="d-db" d="M135 174 a35 7 0 0 1 70 0 v24 a35 7 0 0 1 -70 0 z"/><path class="d-db" d="M135 174 a35 7 0 0 0 70 0" fill="none"/>
+<path class="d-db" d="M575 174 a35 7 0 0 1 70 0 v24 a35 7 0 0 1 -70 0 z"/><path class="d-db" d="M575 174 a35 7 0 0 0 70 0" fill="none"/>
+<text class="d-mut" x="215" y="194">H2 libros</text><text class="d-mut" x="655" y="194">H2 prestamos</text></svg></div>
+<div class="rules">
+<div><h3>Esta vez no hay código para copiar</h3><p>La guía dice qué construir, no cómo. Si se traban, consulten la guía del laboratorio y la del taller de Docker.</p></div>
+<div><h3>Cronométrense</h3><p>Parte 1 en 25 minutos, Parte 2 en 30 y Parte 3 en 15. Si una parte se alarga, sigan con la siguiente: lo parcial también cuenta.</p></div>
+<div><h3>El orden importa</h3><p>Primero que funcione Libros. Un servicio completo vale más que dos a medias.</p></div>
+</div>
+</section>
+<section class="part" id="parte-1"><header class="part-head"><p class="part-tag">Parte 1</p><h2>Servicio de Libros</h2><p>Un servicio con su base de datos y una API REST completa.</p></header><article class="step" id="paso-1"><div class="step-num" aria-hidden="true">1</div><div class="step-body"><h3><span class="sr">Paso 1. </span>Generen el proyecto Libros</h3>
+<p>En start.spring.io, con la misma configuración del laboratorio: Group <code>co.edu.ufps</code>, Artifact <code>libros</code>, y las dependencias Spring Web, Spring Data JPA, H2 Database y Validation.</p>
+<p>Configuren el servicio en el puerto <b>8091</b>, con su propia base H2 llamada <code>libros</code>.</p>
+<p class="tip">Si no recuerdan qué propiedades van en <code>application.properties</code>, revisen el paso 2 de la guía del laboratorio. Copiar el formato está bien; entender cada línea es lo que se evalúa.</p>
+<label class="check" for="ok-1"><input type="checkbox" id="ok-1" data-step="1"><span><b>Punto de control.</b> El servicio arranca en el puerto 8091.</span></label></div></article><article class="step" id="paso-2"><div class="step-num" aria-hidden="true">2</div><div class="step-body"><h3><span class="sr">Paso 2. </span>Modelen la entidad Libro</h3>
+<p>Un libro tiene estos datos, con estas reglas:</p>
+<div class="tw"><table class="spec"><thead><tr><th>Campo</th><th>Tipo</th><th>Regla</th></tr></thead><tbody><tr><td><code>id</code></td><td>Long</td><td>Generado por la base de datos</td></tr><tr><td><code>titulo</code></td><td>String</td><td>Obligatorio, no vacío</td></tr><tr><td><code>autor</code></td><td>String</td><td>Obligatorio, no vacío</td></tr><tr><td><code>ejemplaresDisponibles</code></td><td>Integer</td><td>Obligatorio, mínimo 0</td></tr></tbody></table></div>
+<p>Carguen tres libros de ejemplo al arrancar. Uno de ellos debe tener <b>0 ejemplares</b>.</p>
+<figure class="code"><div class="code-head"><span class="code-path">src/main/resources/data.sql</span><button class="copy" type="button" data-target="c1">Copiar</button></div><pre id="c1"><code>INSERT INTO libro (titulo, autor, ejemplares_disponibles) VALUES ('Cien anios de soledad', 'Gabriel Garcia Marquez', 3);
+INSERT INTO libro (titulo, autor, ejemplares_disponibles) VALUES ('Building Microservices', 'Sam Newman', 1);
+INSERT INTO libro (titulo, autor, ejemplares_disponibles) VALUES ('Clean Code', 'Robert C. Martin', 0);</code></pre></figure>
+<p class="tip">Fíjense en el nombre de la columna: JPA convierte <code>ejemplaresDisponibles</code> en <code>ejemplares_disponibles</code>.</p>
+<label class="check" for="ok-2"><input type="checkbox" id="ok-2" data-step="2"><span><b>Punto de control.</b> La entidad tiene las cuatro anotaciones de validación y existe <code>data.sql</code>.</span></label></div></article><article class="step" id="paso-3"><div class="step-num" aria-hidden="true">3</div><div class="step-body"><h3><span class="sr">Paso 3. </span>Expongan la API de Libros</h3>
+<p>Implementen el repositorio y el controlador con este contrato:</p>
+<div class="tw"><table class="spec"><thead><tr><th>Verbo</th><th>Ruta</th><th>Hace</th><th>Responde</th></tr></thead><tbody><tr><td>GET</td><td><code>/libros</code></td><td>Lista todos</td><td>200</td></tr><tr><td>GET</td><td><code>/libros/{id}</code></td><td>Trae uno</td><td>200 o 404</td></tr><tr><td>POST</td><td><code>/libros</code></td><td>Crea uno</td><td>201 o 400</td></tr><tr><td>PUT</td><td><code>/libros/{id}</code></td><td>Actualiza uno</td><td>200, 400 o 404</td></tr><tr><td>DELETE</td><td><code>/libros/{id}</code></td><td>Borra uno</td><td>204 o 404</td></tr></tbody></table></div>
+<label class="check" for="ok-3"><input type="checkbox" id="ok-3" data-step="3"><span><b>Punto de control.</b> <code>http://localhost:8091/libros</code> muestra los tres libros, <code>/libros/99</code> responde 404 y un libro sin título responde 400.</span></label></div></article></section><section class="part" id="parte-4"><header class="part-head"><p class="part-tag">Parte 2</p><h2>Servicio de Préstamos</h2><p>Un segundo servicio que consulta a Libros antes de prestar.</p></header><article class="step" id="paso-4"><div class="step-num" aria-hidden="true">4</div><div class="step-body"><h3><span class="sr">Paso 4. </span>Generen el proyecto Préstamos</h3>
+<p>Mismo procedimiento, con Artifact <code>prestamos</code>, puerto <b>8092</b> y base H2 <code>prestamos</code>.</p>
+<p>La dirección del servicio de Libros debe quedar en configuración, no en el código:</p>
+<figure class="code"><div class="code-head"><span class="code-path">src/main/resources/application.properties (agregar)</span><button class="copy" type="button" data-target="c2">Copiar</button></div><pre id="c2"><code>libros.url=http://localhost:8091</code></pre></figure>
+<label class="check" for="ok-4"><input type="checkbox" id="ok-4" data-step="4"><span><b>Punto de control.</b> El servicio arranca en el puerto 8092 y tiene la propiedad <code>libros.url</code>.</span></label></div></article><article class="step" id="paso-5"><div class="step-num" aria-hidden="true">5</div><div class="step-body"><h3><span class="sr">Paso 5. </span>Modelen el préstamo</h3>
+<div class="tw"><table class="spec"><thead><tr><th>Campo</th><th>Tipo</th><th>De dónde sale</th></tr></thead><tbody><tr><td><code>id</code></td><td>Long</td><td>Generado</td></tr><tr><td><code>libroId</code></td><td>Long</td><td>Lo envía el cliente</td></tr><tr><td><code>tituloLibro</code></td><td>String</td><td>Copia del título que responde Libros</td></tr><tr><td><code>codigoEstudiante</code></td><td>String</td><td>Lo envía el cliente (obligatorio)</td></tr><tr><td><code>fechaPrestamo</code></td><td>LocalDate</td><td>La fecha de hoy</td></tr><tr><td><code>fechaDevolucion</code></td><td>LocalDate</td><td>Hoy más 15 días</td></tr><tr><td><code>estado</code></td><td>String</td><td><code>ACTIVO</code></td></tr></tbody></table></div>
+<p>El cliente solo envía esto:</p>
+<figure class="code"><div class="code-head"><span class="code-path">Cuerpo de POST /prestamos</span><button class="copy" type="button" data-target="c3">Copiar</button></div><pre id="c3"><code>{ "libroId": 1, "codigoEstudiante": "1152001" }</code></pre></figure>
+<p class="tip">Necesitan tres clases además de la entidad: un <code>record</code> para lo que envía el cliente, otro <code>record</code> con lo que Préstamos necesita saber de un libro (no usen la entidad de Libros) y un cliente HTTP con <code>RestClient</code>. Es el mismo patrón de Pedidos y Catálogo.</p>
+<label class="check" for="ok-5"><input type="checkbox" id="ok-5" data-step="5"><span><b>Punto de control.</b> La entidad y los dos <code>record</code> compilan.</span></label></div></article><article class="step" id="paso-6"><div class="step-num" aria-hidden="true">6</div><div class="step-body"><h3><span class="sr">Paso 6. </span>Implementen la regla del préstamo</h3>
+<p><code>POST /prestamos</code> debe consultar a Libros antes de guardar, y responder así:</p>
+<div class="tw"><table class="spec"><thead><tr><th>Situación</th><th>Préstamos responde</th><th>Mensaje sugerido</th></tr></thead><tbody><tr><td>El libro existe y tiene ejemplares</td><td><b>201</b> con el préstamo guardado</td><td>—</td></tr><tr><td>El libro no existe (Libros responde 404)</td><td><b>400</b></td><td>El libro 99 no existe</td></tr><tr><td>El libro tiene 0 ejemplares</td><td><b>409</b></td><td>No hay ejemplares disponibles</td></tr><tr><td>Libros no responde</td><td><b>503</b></td><td>El servicio de libros no responde</td></tr><tr><td>Falta el código del estudiante</td><td><b>400</b></td><td>(lo hace <code>@Valid</code>)</td></tr></tbody></table></div>
+<p>Además, <code>GET /prestamos</code> lista los préstamos guardados.</p>
+<label class="check" for="ok-6"><input type="checkbox" id="ok-6" data-step="6"><span><b>Punto de control.</b> Las cinco situaciones de la tabla responden con el código correcto (prueben con la tabla del paso 9).</span></label></div></article></section><section class="part" id="parte-7"><header class="part-head"><p class="part-tag">Parte 3</p><h2>Contenedores, pruebas y defensa</h2><p>Empaquetar, verificar y explicar.</p></header><article class="step" id="paso-7"><div class="step-num" aria-hidden="true">7</div><div class="step-body"><h3><span class="sr">Paso 7. </span>Escriban los Dockerfile</h3>
+<p>Cada servicio necesita su <code>Dockerfile</code> y su <code>.dockerignore</code>, como en el taller. Recuerden ajustar el puerto en <code>EXPOSE</code> y la versión de Java en las líneas <code>FROM</code>.</p>
+<label class="check" for="ok-7"><input type="checkbox" id="ok-7" data-step="7"><span><b>Punto de control.</b> Hay un <code>Dockerfile</code> en <code>libros/</code> y otro en <code>prestamos/</code>.</span></label></div></article><article class="step" id="paso-8"><div class="step-num" aria-hidden="true">8</div><div class="step-body"><h3><span class="sr">Paso 8. </span>Escriban el compose.yaml</h3>
+<p>En la carpeta raíz, un <code>compose.yaml</code> con los dos servicios. Préstamos debe encontrar a Libros por su nombre dentro de la red de Docker.</p>
+<p class="tip">La propiedad <code>libros.url</code> se reemplaza con la variable de entorno <code>LIBROS_URL</code>. ¿Qué valor debe tener dentro de Docker?</p>
+<p class="tip">Si en la sala no hay Docker, escriban los archivos igual: se evalúa que estén bien escritos, y los prueban en casa.</p>
+<label class="check" for="ok-8"><input type="checkbox" id="ok-8" data-step="8"><span><b>Punto de control.</b> <code>docker compose config</code> no muestra errores, o el docente revisó los archivos.</span></label></div></article><article class="step" id="paso-9"><div class="step-num" aria-hidden="true">9</div><div class="step-body"><h3><span class="sr">Paso 9. </span>Pasen la batería de pruebas</h3>
+<p>Ejecuten las ocho pruebas en orden, con Postman, curl o <code>Invoke-RestMethod</code>. Anoten el código que obtuvieron.</p>
+<div class="tw"><table class="tests"><thead><tr><th>#</th><th>Verbo</th><th>URL</th><th>Cuerpo</th><th>Esperado</th></tr></thead><tbody><tr><td>1</td><td>GET</td><td><code>localhost:8091/libros</code></td><td>—</td><td>200 con 3 libros</td></tr><tr><td>2</td><td>GET</td><td><code>localhost:8091/libros/99</code></td><td>—</td><td>404</td></tr><tr><td>3</td><td>POST</td><td><code>localhost:8091/libros</code></td><td><code>{"titulo":"","autor":"X","ejemplaresDisponibles":1}</code></td><td>400</td></tr><tr><td>4</td><td>POST</td><td><code>localhost:8092/prestamos</code></td><td><code>{"libroId":1,"codigoEstudiante":"1152001"}</code></td><td>201</td></tr><tr><td>5</td><td>POST</td><td><code>localhost:8092/prestamos</code></td><td><code>{"libroId":99,"codigoEstudiante":"1152001"}</code></td><td>400</td></tr><tr><td>6</td><td>POST</td><td><code>localhost:8092/prestamos</code></td><td><code>{"libroId":3,"codigoEstudiante":"1152001"}</code></td><td>409</td></tr><tr><td>7</td><td>POST</td><td><code>localhost:8092/prestamos</code></td><td><code>{"libroId":1}</code></td><td>400</td></tr><tr><td>8</td><td>POST</td><td><code>localhost:8092/prestamos</code> con Libros apagado</td><td><code>{"libroId":1,"codigoEstudiante":"1152001"}</code></td><td>503</td></tr></tbody></table></div>
+<figure class="code"><div class="code-head"><span class="code-path">Ejemplo con curl (prueba 4)</span><button class="copy" type="button" data-target="c4">Copiar</button></div><pre id="c4"><code>curl -i -X POST http://localhost:8092/prestamos -H "Content-Type: application/json" -d '{"libroId":1,"codigoEstudiante":"1152001"}'</code></pre></figure>
+<label class="check" for="ok-9"><input type="checkbox" id="ok-9" data-step="9"><span><b>Punto de control.</b> Las ocho pruebas dan el código esperado.</span></label></div></article><article class="step" id="paso-10"><div class="step-num" aria-hidden="true">10</div><div class="step-body"><h3><span class="sr">Paso 10. </span>Prepárense para defender su código</h3>
+<p>Al revisar su trabajo, el docente le hará a <b>cada integrante</b> una de estas preguntas sobre su propio código. La defensa es individual. Prepárenlas en pareja, en voz alta:</p>
+<ol class="qs">
+<li>¿Por qué Préstamos tiene su propio <code>record</code> del libro en lugar de usar la entidad <code>Libro</code>?</li>
+<li>¿Por qué el préstamo guarda una copia del título si Libros ya lo tiene?</li>
+<li>¿Por qué el libro inexistente responde 400 en Préstamos y no 404?</li>
+<li>¿Qué cambia en la dirección de Libros cuando todo corre en Docker? ¿Por qué no hubo que tocar Java?</li>
+<li>Préstamos no descuenta ejemplares. ¿Qué servicio debería hacerlo y qué pasa si falla justo después de guardar el préstamo?</li>
+</ol>
+<label class="check" for="ok-10"><input type="checkbox" id="ok-10" data-step="10"><span><b>Punto de control.</b> Ambos integrantes pueden responder las cinco preguntas sin leer.</span></label></div></article></section>
+<section class="part" id="reto"><header class="part-head"><p class="part-tag">Reto opcional</p><h2>Que el préstamo descuente el ejemplar</h2><p>Bonificación de hasta 0,5 sobre la nota del simulacro, sin pasar de 5,0.</p></header>
+<div class="retos"><article>
+<p>Hoy dos estudiantes pueden pedir el único ejemplar de "Building Microservices" y ambos lo reciben. Arréglenlo:</p>
+<ol class="qs">
+<li>En Libros, agreguen <code>PATCH /libros/{id}/prestar</code>: descuenta un ejemplar, o responde 409 si no quedan. Libros es el dueño del dato: solo Libros lo cambia.</li>
+<li>En Préstamos, llamen a ese endpoint antes de guardar el préstamo.</li>
+<li>Discutan: si Libros descontó el ejemplar pero Préstamos falla al guardar, el ejemplar queda "perdido". ¿Cómo lo arreglarían? Esto se llama <b>saga</b> con <b>compensación</b>.</li>
+</ol></article></div></section>
+<section class="rub" id="rubrica"><h2>Así se califica</h2>
+<p>La nota es de la pareja, excepto la defensa, que es individual. Es la misma rúbrica que se usará en el examen final.</p>
+<div class="tw"><table class="rubric"><thead><tr><th>Criterio</th><th>Qué se revisa</th><th>Puntos</th></tr></thead><tbody><tr><td>Servicio de Libros</td><td>API completa, códigos 200/201/204/400/404, validaciones, base propia</td><td>1,5</td></tr><tr><td>Servicio de Préstamos</td><td>Llamada a Libros con DTO propio y las respuestas 201, 400, 409 y 503</td><td>1,5</td></tr><tr><td>Docker</td><td>Dockerfile por servicio y compose con la dirección correcta entre servicios</td><td>1,0</td></tr><tr><td>Defensa (individual)</td><td>Cada integrante responde una pregunta sobre su propio código</td><td>1,0</td></tr><tr><td><b>Total</b></td><td></td><td><b>5,0</b></td></tr></tbody></table></div></section>
+<section class="deliver" id="entrega"><h2>Qué entregar en Moodle, al terminar la clase</h2>
+<ol><li>Enlace a su repositorio de GitHub con las carpetas <code>libros</code> y <code>prestamos</code>, los Dockerfile y el <code>compose.yaml</code>. Si no usan GitHub, un zip <b>sin</b> las carpetas <code>target</code>.</li>
+<li>Captura de las ocho pruebas del paso 9, o de las que alcanzaron, con el código de respuesta visible.</li>
+<li>Los nombres de ambos integrantes y hasta qué paso llegaron.</li></ol>
+<p>Entreguen lo que tengan aunque no hayan terminado: lo parcial también se califica. Antes de entregar, avísenle al docente para la defensa.</p></section>
+</main>
+<script>
+(function(){
+  var KEY='simulacro-biblioteca-1';
+  var boxes=[].slice.call(document.querySelectorAll('input[data-step]'));
+  var saved={};
+  try{ saved=JSON.parse(localStorage.getItem(KEY)||'{}')||{}; }catch(e){ saved={}; }
+  function render(){
+    var n=0;
+    boxes.forEach(function(b){
+      var art=document.getElementById('paso-'+b.dataset.step);
+      if(b.checked){n++; art&&art.classList.add('done');} else { art&&art.classList.remove('done'); }
+    });
+    document.getElementById('count').textContent=n;
+    document.getElementById('fill').style.width=(100*n/boxes.length)+'%';
+  }
+  boxes.forEach(function(b){
+    b.checked=!!saved[b.dataset.step];
+    b.addEventListener('change',function(){
+      saved[b.dataset.step]=b.checked;
+      try{ localStorage.setItem(KEY,JSON.stringify(saved)); }catch(e){}
+      render();
+    });
+  });
+  render();
+
+  document.querySelectorAll('.copy').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var pre=document.getElementById(btn.dataset.target);
+      var text=pre.innerText;
+      function done(){ btn.textContent='Copiado'; btn.classList.add('ok'); setTimeout(function(){btn.textContent='Copiar';btn.classList.remove('ok');},1600); }
+      function fallback(){
+        var r=document.createRange(); r.selectNodeContents(pre);
+        var s=window.getSelection(); s.removeAllRanges(); s.addRange(r);
+        btn.textContent='Seleccionado: Ctrl+C';
+        setTimeout(function(){btn.textContent='Copiar';},2500);
+      }
+      try{
+        if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(done,fallback); }
+        else fallback();
+      }catch(e){ fallback(); }
+    });
+  });
+})();
+</script>
+</body>
+</html>
